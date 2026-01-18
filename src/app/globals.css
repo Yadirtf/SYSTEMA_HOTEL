@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@source "../../src";
+
+@theme {
+  --color-primary: #0f172a;
+  --color-secondary: #64748b;
+  --color-accent: #f1f5f9;
+  
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Playfair Display', serif;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+  }
+}
+
+@layer components {
+  .auth-container {
+    @apply w-full max-w-[480px] mx-auto px-4;
+  }
+  
+  .luxury-card {
+    @apply bg-white rounded-[2.5rem] border border-slate-200/60 shadow-[0_20px_50px_rgba(0,0,0,0.05)] overflow-hidden;
+  }
+}
