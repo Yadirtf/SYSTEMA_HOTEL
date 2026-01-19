@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/infrastructure/db/mongo/connection';
-import { deleteUserUseCase, updateUserStatusUseCase } from '@/config/dependencies';
+import { deleteUserUseCase, updateUserStatusUseCase, updateUserUseCase } from '@/config/dependencies';
 import { requireRole } from '@/infrastructure/security/RoleGuard';
 
 type Params = Promise<{ id: string }>;
@@ -34,13 +34,19 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
     await connectDB();
     const body = await request.json();
     
-    if (body.isActive !== undefined) {
+    // Si el body tiene más de un campo o campos específicos de edición, usamos UpdateUserUseCase
+    const editFields = ['firstName', 'lastName', 'document', 'phone', 'role'];
+    const hasEditFields = Object.keys(body).some(key => editFields.includes(key));
+
+    if (hasEditFields) {
+      await updateUserUseCase.execute({ id, ...body });
+    } else if (body.isActive !== undefined) {
       await updateUserStatusUseCase.execute(id, body.isActive);
     }
     
     return NextResponse.json({ message: 'User updated successfully' });
   } catch (error: any) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }
 

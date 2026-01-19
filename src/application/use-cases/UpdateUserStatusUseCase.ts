@@ -13,8 +13,11 @@ export class UpdateUserStatusUseCase {
       updatedAt: new Date()
     };
 
+    const person = await this.userRepository.findPersonByUserId(userId);
+    if (!person) throw new Error('PERSON_NOT_FOUND');
+
     // Usamos el casting porque en el dominio son readonly pero el repo los actualizará
-    await this.userRepository.update(updatedUser as any);
+    await this.userRepository.update(updatedUser as any, person);
   }
 }
 

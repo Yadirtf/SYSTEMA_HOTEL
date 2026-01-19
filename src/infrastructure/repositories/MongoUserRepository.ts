@@ -38,12 +38,18 @@ export class MongoUserRepository implements UserRepository {
     return person ? UserMapper.personToDomain(person) : null;
   }
 
-  async update(user: User): Promise<void> {
+  async update(user: User, person: Person): Promise<void> {
     await UserModel.findByIdAndUpdate(user.id, {
-      email: user.email,
       roleId: user.roleId,
       isActive: user.isActive,
-      deletedAt: user.deletedAt
+    });
+
+    await PersonModel.findOneAndUpdate({ userId: user.id }, {
+      firstName: person.firstName,
+      lastName: person.lastName,
+      document: person.document,
+      phone: person.phone,
+      status: person.status
     });
   }
 
