@@ -80,10 +80,31 @@ export function useUsers() {
     }
   };
 
+  const updateUser = async (userData: any) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(`/api/users/${userData.id}`, {
+        method: 'PATCH',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Error al actualizar usuario');
+      }
+      await fetchUsers();
+    } catch (err: any) {
+      throw err;
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  return { users, loading, error, fetchUsers, createUser, deleteUser, toggleUserStatus };
+  return { users, loading, error, fetchUsers, createUser, deleteUser, toggleUserStatus, updateUser };
 }
 

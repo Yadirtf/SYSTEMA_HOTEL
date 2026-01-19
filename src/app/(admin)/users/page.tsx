@@ -1,44 +1,102 @@
 'use client';
 
-import { Card, CardHeader, CardContent } from '@/presentation/components/ui/Card';
+import { Card, CardContent } from '@/presentation/components/ui/Card';
 import { Button } from '@/presentation/components/ui/Button';
 import { UserTable } from '@/presentation/components/features/UserTable';
 import { useUsers } from '@/presentation/hooks/useUsers';
-import { UserPlus, RefreshCw, X, Mail, Lock, User as UserIcon, Phone, FileText } from 'lucide-react';
-import { useState } from 'react';
+import { UserPlus, RefreshCw, X, Mail, Lock, User as UserIcon, Phone, FileText, SlidersHorizontal } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/presentation/components/ui/Input';
 import { PageHeader } from '@/presentation/components/ui/PageHeader';
 import { toast } from 'sonner';
 import { ConfirmModal } from '@/presentation/components/ui/ConfirmModal';
+import { FilterBar, FilterField } from '@/presentation/components/ui/FilterBar';
+import { EditUserDrawer } from '@/presentation/components/features/EditUserDrawer';
+import { cn } from '@/shared/utils';
 
 export default function UsersManagementPage() {
-  const { users, loading, fetchUsers, deleteUser, toggleUserStatus, createUser } = useUsers();
+  const { users, loading, fetchUsers, deleteUser, toggleUserStatus, createUser, updateUser } = useUsers();
   
-  // Estados para Modales
+  // 1. Configuración de Filtros Dinámicos
+  const userFilterConfig: FilterField[] = [
+    { key: 'search', label: 'Búsqueda General', type: 'search', placeholder: 'Nombre o email...' },
+    { 
+      key: 'role', 
+      label: 'Rol de Acceso', 
+      type: 'select', 
+      options: [
+        { label: 'ADMIN', value: 'ADMIN' },
+        { label: 'RECEPCIONISTA', value: 'RECEPCIONISTA' }
+      ] 
+    },
+    { 
+      key: 'isActive', 
+      label: 'Estado de Cuenta', 
+      type: 'select', 
+      options: [
+        { label: 'ACTIVOS', value: 'true' },
+        { label: 'INACTIVOS', value: 'false' }
+      ] 
+    },
+    { key: 'document', label: 'Identificación', type: 'text', placeholder: 'DNI / Pasaporte...' },
+  ];
+
+  // Estados de UI
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [editDrawer, setEditDrawer] = useState<{ open: boolean; user: any | null }>({ open: false, user: null });
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; user: any | null }>({ open: false, user: null });
   const [statusModal, setStatusModal] = useState<{ open: boolean; user: any | null }>({ open: false, user: null });
   
+  // Estado de Filtros
+  const [filters, setFilters] = useState({ search: '', role: '', isActive: '', document: '' });
+
+  // Formulario de Creación
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', email: '', password: '',
     document: '', phone: '', role: 'RECEPCIONISTA'
   });
 
+  // Lógica de Filtrado
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => {
+      const matchSearch = !filters.search || 
+        `${user.firstName} ${user.lastName}`.toLowerCase().includes(filters.search.toLowerCase()) ||
+        user.email.toLowerCase().includes(filters.search.toLowerCase());
+      const matchRole = !filters.role || user.role === filters.role;
+      const matchStatus = !filters.isActive || String(user.isActive) === filters.isActive;
+      const matchDoc = !filters.document || user.document.includes(filters.document);
+      
+      return matchSearch && matchRole && matchStatus && matchDoc;
+    });
+  }, [users, filters]);
+
+  const hasActiveFilters = Object.values(filters).some(v => v !== '');
+
+  // Handlers
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await createUser(formData);
-      toast.success('Colaborador registrado', {
-        description: `El acceso para ${formData.firstName} ha sido configurado.`
-      });
+      toast.success('Usuario creado con éxito');
       setIsModalOpen(false);
       setFormData({
         firstName: '', lastName: '', email: '', password: '',
         document: '', phone: '', role: 'RECEPCIONISTA'
       });
     } catch (err: any) {
-      toast.error('Error de registro', { description: err.message });
+      toast.error('Error al crear usuario', { description: err.message });
+    }
+  };
+
+  const handleUpdateUser = async (data: any) => {
+    try {
+      await updateUser({ id: editDrawer.user.id, ...data });
+      toast.success('Perfil actualizado');
+      setEditDrawer({ open: false, user: null });
+    } catch (err: any) {
+      toast.error('Error al actualizar', { description: err.message });
     }
   };
 
@@ -49,13 +107,7 @@ export default function UsersManagementPage() {
       toast.success('Usuario eliminado permanentemente');
       setDeleteModal({ open: false, user: null });
     } catch (err: any) {
-      if (err.message === 'CANNOT_DELETE_SELF') {
-        toast.error('Operación restringida', {
-          description: 'No es posible eliminar su propia cuenta administrativa.'
-        });
-      } else {
-        toast.error('Error', { description: err.message });
-      }
+      toast.error('Error', { description: err.message });
       setDeleteModal({ open: false, user: null });
     }
   };
@@ -73,46 +125,71 @@ export default function UsersManagementPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader 
         title="Gestión de Personal" 
         subtitle="Administre los accesos y roles de su equipo operativo."
         actions={
           <>
-            <Button variant="outline" onClick={fetchUsers} className="rounded-xl h-12">
+            <Button 
+              variant="secondary" 
+              onClick={() => setIsFilterOpen(!isFilterOpen)} 
+              className={cn(
+                "rounded-xl h-12 gap-2 border-slate-200 transition-all",
+                isFilterOpen && "bg-slate-900 text-white border-slate-900",
+                hasActiveFilters && !isFilterOpen && "ring-2 ring-blue-500 ring-offset-2"
+              )}
+            >
+              <SlidersHorizontal size={18} />
+              <span className="hidden sm:inline">Filtros</span>
+            </Button>
+            <Button variant="outline" onClick={fetchUsers} className="rounded-xl h-12 px-3">
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
             <Button onClick={() => setIsModalOpen(true)} className="rounded-xl h-12 gap-2">
-              <UserPlus className="h-5 w-5" /> Registrar Nuevo
+              <UserPlus className="h-5 w-5" /> <span className="hidden sm:inline">Registrar Nuevo</span>
             </Button>
           </>
         }
       />
 
-      <Card className="border-none shadow-sm">
-        
+      {/* BARRA DE FILTROS DINÁMICA */}
+      <FilterBar 
+        isOpen={isFilterOpen}
+        config={userFilterConfig}
+        filters={filters}
+        onFilterChange={setFilters}
+        onClear={() => setFilters({ search: '', role: '', isActive: '', document: '' })}
+      />
+
+      <Card className="border-none shadow-sm overflow-visible">
         <CardContent className="p-0">
           <UserTable 
-            users={users} 
+            users={filteredUsers} 
             isLoading={loading} 
             onDelete={(user) => setDeleteModal({ open: true, user })} 
             onToggleStatus={(user) => setStatusModal({ open: true, user })}
+            onEdit={(user) => setEditDrawer({ open: true, user })}
           />
         </CardContent>
       </Card>
 
-      {/* MODAL: ELIMINAR */}
+      <EditUserDrawer 
+        isOpen={editDrawer.open}
+        user={editDrawer.user}
+        onClose={() => setEditDrawer({ open: false, user: null })}
+        onSave={handleUpdateUser}
+      />
+
       <ConfirmModal 
         isOpen={deleteModal.open}
         title="¿Eliminar colaborador?"
-        description={`Esta acción eliminará permanentemente a ${deleteModal.user?.firstName} de la base de datos. Esta operación no se puede deshacer.`}
+        description={`Esta acción eliminará permanentemente a ${deleteModal.user?.firstName}.`}
         confirmText="Eliminar permanentemente"
-        variant="danger"
         onClose={() => setDeleteModal({ open: false, user: null })}
         onConfirm={confirmDelete}
       />
 
-      {/* MODAL: ESTADO */}
       <ConfirmModal 
         isOpen={statusModal.open}
         title={statusModal.user?.isActive ? 'Desactivar acceso' : 'Activar acceso'}

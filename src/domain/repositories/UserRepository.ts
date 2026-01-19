@@ -10,7 +10,7 @@ export interface UserRepository {
   findRoleById(id: string): Promise<Role | null>;
   findAll(): Promise<User[]>;
   findById(id: string): Promise<User | null>;
-  update(user: User): Promise<void>;
+  update(user: User, person: Person): Promise<void>;
   delete(id: string): Promise<void>;
   findPersonByUserId(userId: string): Promise<Person | null>;
 }

@@ -4,6 +4,7 @@ import {
   Trash2, 
   CheckCircle, 
   XCircle,
+  User as UserIcon
 } from 'lucide-react';
 import { Button } from '@/presentation/components/ui/Button';
 import { motion } from 'framer-motion';
@@ -13,10 +14,11 @@ interface UserTableProps {
   users: any[];
   onToggleStatus: (user: any) => void;
   onDelete: (user: any) => void;
+  onEdit: (user: any) => void;
   isLoading: boolean;
 }
 
-export const UserTable = ({ users, onToggleStatus, onDelete, isLoading }: UserTableProps) => {
+export const UserTable = ({ users, onToggleStatus, onDelete, onEdit, isLoading }: UserTableProps) => {
   if (isLoading) return (
     <div className="h-64 flex flex-col items-center justify-center gap-4">
       <div className="h-8 w-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
@@ -81,6 +83,14 @@ export const UserTable = ({ users, onToggleStatus, onDelete, isLoading }: UserTa
               </td>
               <td className="py-5 px-8">
                 <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    variant="secondary" 
+                    className="h-9 w-9 p-0 rounded-xl hover:bg-white hover:shadow-md border-none"
+                    title="Editar perfil"
+                    onClick={() => onEdit(user)}
+                  >
+                    <UserIcon size={16} className="text-slate-600" />
+                  </Button>
                   <Button 
                     variant="secondary" 
                     className="h-9 w-9 p-0 rounded-xl hover:bg-white hover:shadow-md border-none"
