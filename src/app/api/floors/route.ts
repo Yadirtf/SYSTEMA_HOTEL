@@ -1,0 +1,28 @@
+import { NextResponse } from 'next/server';
+import { listFloorsUseCase, createFloorUseCase } from '@/config/dependencies';
+import { requireRole } from '@/infrastructure/security/RoleGuard';
+
+export async function GET(request: Request) {
+  const guard = await requireRole(['ADMIN', 'RECEPCIONISTA'])(request);
+  if (guard.error || !guard.user) return NextResponse.json({ error: guard.error }, { status: guard.status });
+
+  try {
+    const floors = await listFloorsUseCase.execute();
+    return NextResponse.json(floors);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  const guard = await requireRole(['ADMIN'])(request);
+  if (guard.error || !guard.user) return NextResponse.json({ error: guard.error }, { status: guard.status });
+
+  try {
+    const body = await request.json();
+    await createFloorUseCase.execute(body);
+    return NextResponse.json({ message: 'Piso creado correctamente' }, { status: 201 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+}

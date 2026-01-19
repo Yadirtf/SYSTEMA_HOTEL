@@ -7,7 +7,9 @@ import {
   LogOut, 
   X,
   User as UserIcon,
-  ChevronRight
+  ChevronRight,
+  Layers,
+  ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -27,6 +29,9 @@ export const Sidebar = ({ isOpen, isMobile, user, onClose, onLogout }: SidebarPr
 
   const menuItems = [
     { name: 'Resumen', icon: LayoutDashboard, href: '/dashboard' },
+    { name: 'Habitaciones', icon: Hotel, href: '/rooms' },
+    { name: 'Pisos', icon: Layers, href: '/floors', roles: ['ADMIN'] },
+    { name: 'Categorías', icon: ShieldCheck, href: '/room-types', roles: ['ADMIN'] },
     { name: 'Usuarios', icon: Users, href: '/users', roles: ['ADMIN'] },
   ];
 
