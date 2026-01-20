@@ -4,19 +4,18 @@ import { Card, CardContent } from '@/presentation/components/ui/Card';
 import { Button } from '@/presentation/components/ui/Button';
 import { UserTable } from '@/presentation/components/features/UserTable';
 import { useUsers } from '@/presentation/hooks/useUsers';
-import { UserPlus, RefreshCw, X, Mail, Lock, User as UserIcon, Phone, FileText, SlidersHorizontal } from 'lucide-react';
+import { UserPlus, RefreshCw, X, Mail, Lock, User as UserIcon, Phone, FileText, SlidersHorizontal, Shield } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Input } from '@/presentation/components/ui/Input';
 import { PageHeader } from '@/presentation/components/ui/PageHeader';
 import { toast } from 'sonner';
 import { ConfirmModal } from '@/presentation/components/ui/ConfirmModal';
 import { FilterBar, FilterField } from '@/presentation/components/ui/FilterBar';
 import { EditUserDrawer } from '@/presentation/components/features/EditUserDrawer';
+import { FormDrawer, FormField } from '@/presentation/components/ui/FormDrawer';
 import { cn } from '@/shared/utils';
 
 export default function UsersManagementPage() {
-  const { users, loading, fetchUsers, deleteUser, toggleUserStatus, createUser, updateUser } = useUsers();
+  const { users, loading, fetchUsers, deleteUser, toggleUserStatus, createUser } = useUsers();
   
   // 1. Configuración de Filtros Dinámicos
   const userFilterConfig: FilterField[] = [
@@ -27,7 +26,8 @@ export default function UsersManagementPage() {
       type: 'select', 
       options: [
         { label: 'ADMIN', value: 'ADMIN' },
-        { label: 'RECEPCIONISTA', value: 'RECEPCIONISTA' }
+        { label: 'RECEPCIONISTA', value: 'RECEPCIONISTA' },
+        { label: 'LIMPIEZA', value: 'LIMPIEZA' }
       ] 
     },
     { 
@@ -42,8 +42,29 @@ export default function UsersManagementPage() {
     { key: 'document', label: 'Identificación', type: 'text', placeholder: 'DNI / Pasaporte...' },
   ];
 
+  // Configuración de Formulario de Creación (Nuevo estándar)
+  const createUserFields: FormField[] = [
+    { key: 'firstName', label: 'Nombre', type: 'text', icon: <UserIcon size={18}/>, required: true },
+    { key: 'lastName', label: 'Apellido', type: 'text', icon: <UserIcon size={18}/>, required: true },
+    { key: 'email', label: 'Email', type: 'email', icon: <Mail size={18}/>, required: true, colSpan: 2 },
+    { key: 'password', label: 'Clave Temporal', type: 'password', icon: <Lock size={18}/>, required: true },
+    { key: 'phone', label: 'Teléfono', type: 'text', icon: <Phone size={18}/>, required: true },
+    { key: 'document', label: 'Identificación', type: 'text', icon: <FileText size={18}/>, required: true },
+    { 
+      key: 'role', 
+      label: 'Rol Asignado', 
+      type: 'select', 
+      required: true,
+      options: [
+        { label: 'ADMINISTRADOR', value: 'ADMIN' },
+        { label: 'RECEPCIONISTA', value: 'RECEPCIONISTA' },
+        { label: 'LIMPIEZA', value: 'LIMPIEZA' }
+      ]
+    }
+  ];
+
   // Estados de UI
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [editDrawer, setEditDrawer] = useState<{ open: boolean; user: any | null }>({ open: false, user: null });
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; user: any | null }>({ open: false, user: null });
@@ -51,12 +72,6 @@ export default function UsersManagementPage() {
   
   // Estado de Filtros
   const [filters, setFilters] = useState({ search: '', role: '', isActive: '', document: '' });
-
-  // Formulario de Creación
-  const [formData, setFormData] = useState({
-    firstName: '', lastName: '', email: '', password: '',
-    document: '', phone: '', role: 'RECEPCIONISTA'
-  });
 
   // Lógica de Filtrado
   const filteredUsers = useMemo(() => {
@@ -75,28 +90,13 @@ export default function UsersManagementPage() {
   const hasActiveFilters = Object.values(filters).some(v => v !== '');
 
   // Handlers
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreateUser = async (data: any) => {
     try {
-      await createUser(formData);
+      await createUser(data);
       toast.success('Usuario creado con éxito');
-      setIsModalOpen(false);
-      setFormData({
-        firstName: '', lastName: '', email: '', password: '',
-        document: '', phone: '', role: 'RECEPCIONISTA'
-      });
+      setIsCreateDrawerOpen(false);
     } catch (err: any) {
       toast.error('Error al crear usuario', { description: err.message });
-    }
-  };
-
-  const handleUpdateUser = async (data: any) => {
-    try {
-      await updateUser({ id: editDrawer.user.id, ...data });
-      toast.success('Perfil actualizado');
-      setEditDrawer({ open: false, user: null });
-    } catch (err: any) {
-      toast.error('Error al actualizar', { description: err.message });
     }
   };
 
@@ -146,7 +146,7 @@ export default function UsersManagementPage() {
             <Button variant="outline" onClick={fetchUsers} className="rounded-xl h-12 px-3">
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
-            <Button onClick={() => setIsModalOpen(true)} className="rounded-xl h-12 gap-2">
+            <Button onClick={() => setIsCreateDrawerOpen(true)} className="rounded-xl h-12 gap-2">
               <UserPlus className="h-5 w-5" /> <span className="hidden sm:inline">Registrar Nuevo</span>
             </Button>
           </>
@@ -162,7 +162,7 @@ export default function UsersManagementPage() {
         onClear={() => setFilters({ search: '', role: '', isActive: '', document: '' })}
       />
 
-      <Card className="border-none shadow-sm overflow-visible">
+      <Card className="border-none shadow-sm overflow-visible rounded-[2rem]">
         <CardContent className="p-0">
           <UserTable 
             users={filteredUsers} 
@@ -174,11 +174,21 @@ export default function UsersManagementPage() {
         </CardContent>
       </Card>
 
+      {/* Edición (Ahora auto-gestionado) */}
       <EditUserDrawer 
         isOpen={editDrawer.open}
         user={editDrawer.user}
         onClose={() => setEditDrawer({ open: false, user: null })}
-        onSave={handleUpdateUser}
+      />
+
+      {/* Creación (Usando el nuevo FormDrawer genérico) */}
+      <FormDrawer
+        isOpen={isCreateDrawerOpen}
+        onClose={() => setIsCreateDrawerOpen(false)}
+        title="Nuevo Colaborador"
+        description="Complete el perfil para otorgar acceso al sistema."
+        fields={createUserFields}
+        onSubmit={handleCreateUser}
       />
 
       <ConfirmModal 
@@ -199,68 +209,6 @@ export default function UsersManagementPage() {
         onClose={() => setStatusModal({ open: false, user: null })}
         onConfirm={confirmToggleStatus}
       />
-
-      {/* Modal de Creación */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsModalOpen(false)}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden"
-            >
-              <div className="p-10">
-                <div className="flex justify-between items-start mb-8">
-                  <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900 tracking-tight">Nuevo Colaborador</h3>
-                    <p className="text-slate-400 text-sm">Complete el perfil para otorgar acceso al sistema.</p>
-                  </div>
-                  <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                    <X className="h-6 w-6 text-slate-400" />
-                  </button>
-                </div>
-
-                <form onSubmit={handleCreateUser} className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input label="Nombre" placeholder="Ej. Ana" icon={<UserIcon size={18}/>} value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} required />
-                    <Input label="Apellido" placeholder="Ej. Lopez" icon={<UserIcon size={18}/>} value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} required />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input label="Email" type="email" placeholder="ana@hotel.com" icon={<Mail size={18}/>} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
-                    <Input label="Clave Temporal" type="password" placeholder="••••••••" icon={<Lock size={18}/>} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} required />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Input label="Documento" placeholder="ID / DNI" icon={<FileText size={18}/>} value={formData.document} onChange={e => setFormData({...formData, document: e.target.value})} required />
-                    <Input label="Teléfono" placeholder="+1..." icon={<Phone size={18}/>} value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1 mb-2 block">Rol Asignado</label>
-                    <select 
-                      className="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium focus:ring-2 focus:ring-slate-900 transition-all outline-none"
-                      value={formData.role}
-                      onChange={e => setFormData({...formData, role: e.target.value})}
-                    >
-                      <option value="RECEPCIONISTA">RECEPCIONISTA</option>
-                      <option value="ADMIN">ADMINISTRADOR</option>
-                    </select>
-                  </div>
-                  <Button type="submit" className="w-full h-14 rounded-2xl">
-                    Crear y Notificar Colaborador
-                  </Button>
-                </form>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

@@ -40,6 +40,7 @@ export class MongoUserRepository implements UserRepository {
 
   async update(user: User, person: Person): Promise<void> {
     await UserModel.findByIdAndUpdate(user.id, {
+      email: user.email, // AHORA SE ACTUALIZA EL EMAIL
       roleId: user.roleId,
       isActive: user.isActive,
     });
@@ -54,7 +55,6 @@ export class MongoUserRepository implements UserRepository {
   }
 
   async delete(id: string): Promise<void> {
-    // Eliminación física total del usuario y su información personal vinculada
     await PersonModel.deleteOne({ userId: id });
     await UserModel.findByIdAndDelete(id);
   }
@@ -72,9 +72,6 @@ export class MongoUserRepository implements UserRepository {
   }
 
   async save(user: User, person: Person, role: Role): Promise<void> {
-    // Hemos eliminado las transacciones para asegurar compatibilidad total con cualquier MongoDB
-    
-    // 1. Asegurar que el rol existe o crearlo
     let roleDoc = await RoleModel.findOne({ name: role.name });
     if (!roleDoc) {
       roleDoc = new RoleModel({
@@ -84,7 +81,6 @@ export class MongoUserRepository implements UserRepository {
       await roleDoc.save();
     }
 
-    // 2. Crear el usuario
     const userDoc = new UserModel({
       email: user.email,
       password: user.password,
@@ -93,7 +89,6 @@ export class MongoUserRepository implements UserRepository {
     });
     await userDoc.save();
 
-    // 3. Crear la persona vinculada al usuario
     const personDoc = new PersonModel({
       userId: userDoc._id,
       firstName: person.firstName,

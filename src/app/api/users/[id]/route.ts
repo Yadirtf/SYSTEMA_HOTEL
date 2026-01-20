@@ -34,11 +34,12 @@ export async function PATCH(
   try {
     const body = await request.json();
     
-    // Si viene isActive, usamos UpdateUserStatusUseCase
-    if (body.isActive !== undefined) {
+    // Si SOLO viene isActive (caso del botón rápido de la tabla), usamos UpdateUserStatusUseCase
+    // Si vienen más campos (caso del FormDrawer), usamos UpdateUserUseCase
+    const keys = Object.keys(body);
+    if (keys.length === 1 && keys[0] === 'isActive') {
       await updateUserStatusUseCase.execute(id, body.isActive);
     } else {
-      // Si vienen otros datos, usamos UpdateUserUseCase
       await updateUserUseCase.execute({ id, ...body });
     }
 
