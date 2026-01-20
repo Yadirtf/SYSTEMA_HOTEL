@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { updateRoomTypeUseCase, deleteRoomTypeUseCase } from '@/config/dependencies';
 import { requireRole } from '@/infrastructure/security/RoleGuard';
+import { dbConnect } from '@/infrastructure/db/mongo/connection';
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await dbConnect();
   const guard = await requireRole(['ADMIN'])(request);
   if (guard.error || !guard.user) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
@@ -24,6 +26,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await dbConnect();
   const guard = await requireRole(['ADMIN'])(request);
   if (guard.error || !guard.user) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
@@ -36,4 +39,3 @@ export async function DELETE(
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }
-
