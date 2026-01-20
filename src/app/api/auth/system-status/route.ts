@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
-import { connectDB } from '@/infrastructure/db/mongo/connection';
+import { dbConnect } from '@/infrastructure/db/mongo/connection';
 import { getSystemStatusUseCase } from '@/config/dependencies';
 
 export async function GET() {
+  await dbConnect();
   try {
-    await connectDB();
     const status = await getSystemStatusUseCase.execute();
     return NextResponse.json(status);
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-
