@@ -6,28 +6,24 @@ import { useRooms } from '@/presentation/hooks/useRooms';
 import { useFloors } from '@/presentation/hooks/useFloors';
 import { useRoomTypes } from '@/presentation/hooks/useRoomTypes';
 import { RoomCard } from '@/presentation/components/features/RoomCard';
-import { Plus, Filter, RefreshCw, Layers, X, Home, Settings, FileText } from 'lucide-react';
+import { Plus, Filter, Layers, Home } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { cn } from '@/shared/utils';
 import { FilterBar, FilterField } from '@/presentation/components/ui/FilterBar';
 import { toast } from 'sonner';
-import { Input } from '@/presentation/components/ui/Input';
-import { motion, AnimatePresence } from 'framer-motion';
+import { FormDrawer, FormField } from '@/presentation/components/ui/FormDrawer';
 
 export default function RoomsPage() {
   const { floors } = useFloors();
   const { roomTypes } = useRoomTypes();
   const [selectedFloorId, setSelectedFloorId] = useState<string | null>(null);
-  const { rooms, loading, fetchRooms, createRoom } = useRooms(selectedFloorId || undefined);
+  const { rooms, loading, fetchRooms, createRoom, updateRoomStatus } = useRooms(selectedFloorId || undefined);
   
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [editData, setEditData] = useState<any>(null);
   const [filters, setFilters] = useState({ status: '', typeId: '' });
   
-  const [formData, setFormData] = useState({
-    code: '', floorId: '', typeId: '', description: ''
-  });
-
   // Configuración de Filtros
   const filterConfig: FilterField[] = [
     { 
@@ -50,6 +46,53 @@ export default function RoomsPage() {
     }
   ];
 
+  // Configuración de Formulario (Dynamic FormDrawer)
+  const roomFormFields: FormField[] = [
+    { 
+      key: 'code', 
+      label: 'Código / Número', 
+      type: 'text', 
+      placeholder: 'Ej. 101', 
+      icon: <Home size={18}/>, 
+      required: true,
+      colSpan: 2
+    },
+    { 
+      key: 'floorId', 
+      label: 'Piso / Nivel', 
+      type: 'select', 
+      required: true,
+      options: floors.map(f => ({ label: `Piso ${f.number}`, value: f.id }))
+    },
+    { 
+      key: 'typeId', 
+      label: 'Categoría', 
+      type: 'select', 
+      required: true,
+      options: roomTypes.map(t => ({ label: t.name, value: t.id }))
+    },
+    { 
+      key: 'status', 
+      label: 'Estado Actual', 
+      type: 'select', 
+      required: true,
+      options: [
+        { label: 'Disponible', value: 'AVAILABLE' },
+        { label: 'Ocupada', value: 'OCCUPIED' },
+        { label: 'Reservada', value: 'RESERVED' },
+        { label: 'Limpieza', value: 'CLEANING' },
+        { label: 'Mantenimiento', value: 'MAINTENANCE' }
+      ] 
+    },
+    { 
+      key: 'description', 
+      label: 'Descripción (Opcional)', 
+      type: 'textarea', 
+      placeholder: 'Ej. Vista al mar, cama king...', 
+      colSpan: 2 
+    }
+  ];
+
   const filteredRooms = useMemo(() => {
     return rooms.filter(r => {
       const matchStatus = !filters.status || r.status === filters.status;
@@ -58,17 +101,20 @@ export default function RoomsPage() {
     });
   }, [rooms, filters]);
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (data: any) => {
     try {
-      if (!formData.floorId || !formData.typeId) {
-        toast.error('Debe seleccionar un piso y un tipo');
-        return;
+      if (editData) {
+        // En esta fase solo actualizamos el estado si es necesario, 
+        // pero el FormDrawer permite actualizar todo el objeto.
+        // Implementaremos un updateRoom genérico si es necesario, por ahora usamos updateRoomStatus
+        await updateRoomStatus(editData.id, data.status);
+        toast.success('Habitación actualizada correctamente');
+      } else {
+        await createRoom(data);
+        toast.success('Habitación creada correctamente');
       }
-      await createRoom(formData);
-      toast.success('Habitación creada correctamente');
-      setIsModalOpen(false);
-      setFormData({ code: '', floorId: '', typeId: '', description: '' });
+      setIsDrawerOpen(false);
+      setEditData(null);
     } catch (err: any) {
       toast.error(err.message);
     }
@@ -84,7 +130,7 @@ export default function RoomsPage() {
             <Button variant="secondary" onClick={() => setIsFilterOpen(!isFilterOpen)} className="h-12 rounded-xl">
               <Filter size={18} className="mr-2" /> Filtros
             </Button>
-            <Button onClick={() => setIsModalOpen(true)} className="h-12 rounded-xl gap-2">
+            <Button onClick={() => { setEditData(null); setIsDrawerOpen(true); }} className="h-12 rounded-xl gap-2">
               <Plus size={18} /> Nueva Habitación
             </Button>
           </>
@@ -143,6 +189,10 @@ export default function RoomsPage() {
               room={room} 
               roomType={roomTypes.find(t => t.id === room.typeId)}
               floor={floors.find(f => f.id === room.floorId)}
+              onEdit={(r) => {
+                setEditData(r);
+                setIsDrawerOpen(true);
+              }}
             />
           ))}
         </div>
@@ -153,89 +203,16 @@ export default function RoomsPage() {
         </div>
       )}
 
-      {/* Modal de Creación de Habitación */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden"
-            >
-              <div className="p-10">
-                <div className="flex justify-between items-start mb-8">
-                  <div className="space-y-1">
-                    <h3 className="text-2xl font-bold text-slate-900 tracking-tight">Nueva Habitación</h3>
-                    <p className="text-slate-400 text-sm">Configure una nueva unidad en el inventario.</p>
-                  </div>
-                  <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                    <X className="h-6 w-6 text-slate-400" />
-                  </button>
-                </div>
-
-                <form onSubmit={handleCreate} className="space-y-6">
-                  <Input 
-                    label="Código / Número" 
-                    placeholder="Ej. 101" 
-                    icon={<Home size={18}/>} 
-                    value={formData.code} 
-                    onChange={e => setFormData({...formData, code: e.target.value})} 
-                    required 
-                  />
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Piso / Nivel</label>
-                      <div className="relative">
-                        <select 
-                          className="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium focus:ring-2 focus:ring-slate-900 transition-all outline-none"
-                          value={formData.floorId}
-                          onChange={e => setFormData({...formData, floorId: e.target.value})}
-                          required
-                        >
-                          <option value="">Seleccionar...</option>
-                          {floors.map(f => (
-                            <option key={f.id} value={f.id}>Piso {f.number}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Categoría</label>
-                      <div className="relative">
-                        <select 
-                          className="w-full h-12 rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-medium focus:ring-2 focus:ring-slate-900 transition-all outline-none"
-                          value={formData.typeId}
-                          onChange={e => setFormData({...formData, typeId: e.target.value})}
-                          required
-                        >
-                          <option value="">Seleccionar...</option>
-                          {roomTypes.map(t => (
-                            <option key={t.id} value={t.id}>{t.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Input 
-                    label="Descripción (Opcional)" 
-                    placeholder="Ej. Vista al mar, cama king..." 
-                    icon={<FileText size={18}/>} 
-                    value={formData.description} 
-                    onChange={e => setFormData({...formData, description: e.target.value})} 
-                  />
-
-                  <Button type="submit" className="w-full h-14 rounded-2xl">
-                    Registrar Habitación
-                  </Button>
-                </form>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* Drawer de Creación/Edición de Habitación (Nuevo Estándar) */}
+      <FormDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => { setIsDrawerOpen(false); setEditData(null); }}
+        title={editData ? 'Gestionar Habitación' : 'Nueva Habitación'}
+        description={editData ? `Actualizando habitación #${editData.code}` : 'Configure una nueva unidad en el inventario.'}
+        fields={roomFormFields}
+        initialData={editData}
+        onSubmit={handleSave}
+      />
     </div>
   );
 }

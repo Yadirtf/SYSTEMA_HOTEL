@@ -30,11 +30,15 @@ export class RoomManagementMapper {
   }
 
   static toRoomDomain(doc: any): Room {
+    // Si floorId o typeId están populados, extraemos el ID. Si no, usamos el valor directamente.
+    const floorId = doc.floorId?._id ? doc.floorId._id.toString() : doc.floorId?.toString() || '';
+    const typeId = doc.typeId?._id ? doc.typeId._id.toString() : doc.typeId?.toString() || '';
+
     return new Room(
       doc._id.toString(),
       doc.code,
-      doc.floorId.toString(),
-      doc.typeId.toString(),
+      floorId,
+      typeId,
       doc.status as RoomStatus,
       doc.basePrice,
       doc.description,
@@ -44,4 +48,3 @@ export class RoomManagementMapper {
     );
   }
 }
-

@@ -43,10 +43,45 @@ export const useRooms = (floorId?: string) => {
     }
   };
 
+  const updateRoomStatus = async (id: string, status: string) => {
+    try {
+      const res = await fetch(`/api/rooms/${id}`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({ status })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Error al actualizar habitación');
+      }
+      await fetchRooms();
+    } catch (err: any) {
+      throw err;
+    }
+  };
+
+  const deleteRoom = async (id: string) => {
+    try {
+      const res = await fetch(`/api/rooms/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Error al eliminar habitación');
+      }
+      await fetchRooms();
+    } catch (err: any) {
+      throw err;
+    }
+  };
+
   useEffect(() => {
     fetchRooms();
   }, [fetchRooms]);
 
-  return { rooms, loading, fetchRooms, createRoom };
+  return { rooms, loading, fetchRooms, createRoom, updateRoomStatus, deleteRoom };
 };
-

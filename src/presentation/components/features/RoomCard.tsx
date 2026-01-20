@@ -3,7 +3,7 @@
 import { RoomStatus } from '@/domain/entities/Room';
 import { cn } from '@/shared/utils';
 import { motion } from 'framer-motion';
-import { Home, Users, DollarSign, Settings, Trash2, Edit3, MoreHorizontal } from 'lucide-react';
+import { Home, Users, Settings, Edit3, MoreHorizontal } from 'lucide-react';
 
 interface RoomCardProps {
   room: any;
@@ -22,7 +22,7 @@ const statusConfig = {
 };
 
 export const RoomCard = ({ room, roomType, floor, onEdit }: RoomCardProps) => {
-  const config = statusConfig[room.status as RoomStatus];
+  const config = statusConfig[room.status as RoomStatus] || statusConfig[RoomStatus.AVAILABLE];
 
   return (
     <motion.div
@@ -32,7 +32,7 @@ export const RoomCard = ({ room, roomType, floor, onEdit }: RoomCardProps) => {
         config.border
       )}
     >
-      {/* Header: Código y Estado */}
+      {/* Header: Diseño original estable */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-3">
           <div className={cn("p-2.5 rounded-xl shadow-inner", config.bg)}>
@@ -43,7 +43,7 @@ export const RoomCard = ({ room, roomType, floor, onEdit }: RoomCardProps) => {
               #{room.code}
             </h3>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-              Piso {floor?.number || '?'}
+              Piso {floor?.number || 'S/N'}
             </p>
           </div>
         </div>
@@ -64,7 +64,7 @@ export const RoomCard = ({ room, roomType, floor, onEdit }: RoomCardProps) => {
         <div className="flex items-center justify-between text-slate-500">
           <div className="flex items-center gap-2">
             <Settings size={14} className="text-slate-300" />
-            <span className="text-xs font-bold text-slate-600">{roomType?.name || 'Cargando...'}</span>
+            <span className="text-xs font-bold text-slate-600">{roomType?.name || 'Habitación'}</span>
           </div>
           <div className="flex items-center gap-1">
             <Users size={14} className="text-slate-300" />
@@ -98,4 +98,3 @@ export const RoomCard = ({ room, roomType, floor, onEdit }: RoomCardProps) => {
     </motion.div>
   );
 };
-
