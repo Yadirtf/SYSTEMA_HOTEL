@@ -31,11 +31,16 @@ import {
   DeleteRoomUseCase 
 } from '../application/use-cases/RoomUseCases';
 
+// Store Management
+import { MongoStoreRepository } from '../infrastructure/repositories/MongoStoreRepository';
+import { CategoryUseCases, UnitUseCases, ProductUseCases, KardexUseCases, SaleUseCases } from '../application/use-cases/StoreUseCases';
+
 // Repositories
 const userRepository = new MongoUserRepository();
 const floorRepository = new MongoFloorRepository();
 const roomTypeRepository = new MongoRoomTypeRepository();
 const roomRepository = new MongoRoomRepository();
+const storeRepository = new MongoStoreRepository();
 
 // Services
 const passwordHasher = new BcryptPasswordHasher();
@@ -68,3 +73,10 @@ export const listRoomsUseCase = new ListRoomsUseCase(roomRepository);
 export const createRoomUseCase = new CreateRoomUseCase(roomRepository, roomTypeRepository);
 export const updateRoomStatusUseCase = new UpdateRoomStatusUseCase(roomRepository);
 export const deleteRoomUseCase = new DeleteRoomUseCase(roomRepository);
+
+// Use Cases - Store
+export const categoryUseCases = new CategoryUseCases(storeRepository);
+export const unitUseCases = new UnitUseCases(storeRepository);
+export const productUseCases = new ProductUseCases(storeRepository);
+export const kardexUseCases = new KardexUseCases(storeRepository);
+export const saleUseCases = new SaleUseCases(storeRepository);

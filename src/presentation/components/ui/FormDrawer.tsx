@@ -16,6 +16,7 @@ export type FormField = {
   options?: { label: string; value: string | number }[]; // Para selects
   icon?: React.ReactNode;
   colSpan?: 1 | 2; // Para grids
+  onlyNumbers?: boolean; // Nueva propiedad para restringir a solo números
 };
 
 interface FormDrawerProps {
@@ -53,8 +54,16 @@ export function FormDrawer({
     }
   }, [initialData, fields, isOpen]);
 
-  const handleChange = (key: string, value: any) => {
-    setFormData((prev: any) => ({ ...prev, [key]: value }));
+  const handleChange = (key: string, value: any, field: FormField) => {
+    let finalValue = value;
+
+    // Validación limpia: si el campo pide solo números, removemos todo lo que no sea dígito
+    if (field.onlyNumbers && typeof value === 'string') {
+      finalValue = value.replace(/\D/g, '');
+    }
+
+    setFormData((prev: any) => ({ ...prev, [key]: finalValue }));
+    
     if (errors[key]) {
       const newErrors = { ...errors };
       delete newErrors[key];
@@ -128,7 +137,7 @@ export function FormDrawer({
                       <div className="relative group">
                         <select
                           value={formData[field.key] || ''}
-                          onChange={(e) => handleChange(field.key, e.target.value)}
+                          onChange={(e) => handleChange(field.key, e.target.value, field)}
                           required={field.required}
                           className="w-full h-14 rounded-2xl bg-slate-50 border-2 border-transparent px-4 font-medium text-slate-900 focus:bg-white focus:border-slate-900 transition-all outline-none appearance-none"
                         >
@@ -146,7 +155,7 @@ export function FormDrawer({
                     ) : field.type === 'textarea' ? (
                       <textarea
                         value={formData[field.key] || ''}
-                        onChange={(e) => handleChange(field.key, e.target.value)}
+                        onChange={(e) => handleChange(field.key, e.target.value, field)}
                         placeholder={field.placeholder}
                         required={field.required}
                         className="w-full h-32 rounded-2xl bg-slate-50 border-2 border-transparent p-4 font-medium text-slate-900 focus:bg-white focus:border-slate-900 transition-all outline-none resize-none"
@@ -156,7 +165,7 @@ export function FormDrawer({
                         type={field.type}
                         placeholder={field.placeholder}
                         value={formData[field.key] || ''}
-                        onChange={(e) => handleChange(field.key, e.target.value)}
+                        onChange={(e) => handleChange(field.key, e.target.value, field)}
                         required={field.required}
                         icon={field.icon}
                         className="h-14 border-2 border-transparent focus:border-slate-900 bg-slate-50"
