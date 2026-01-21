@@ -46,9 +46,9 @@ export function DataTable<T extends { id: string | number }>({
   );
 
   return (
-    <div className="w-full">
-      {/* VISTA DESKTOP */}
-      <div className="hidden md:block overflow-x-auto">
+    <div className="w-full overflow-hidden">
+      {/* VISTA DESKTOP: Se muestra solo en pantallas grandes (lg) */}
+      <div className="hidden lg:block overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-100">
@@ -94,9 +94,9 @@ export function DataTable<T extends { id: string | number }>({
         </table>
       </div>
 
-      {/* VISTA MOBILE: Se usa el template renderMobileCard si existe */}
+      {/* VISTA MOBILE: Ahora usa un grid adaptativo (1 col en móvil, 2 en tablets) */}
       {renderMobileCard && (
-        <div className="md:hidden space-y-4 pt-4">
+        <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
           {data.map((row) => (
             <motion.div
               key={row.id}

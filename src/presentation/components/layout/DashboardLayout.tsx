@@ -56,7 +56,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
 
       {/* Main Content Area */}
       <main 
-        className="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-[0.16, 1, 0.3, 1]"
+        className="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-[0.16, 1, 0.3, 1] min-w-0"
         style={{ 
           paddingLeft: !isMobile ? (isSidebarOpen ? 280 : 80) : 0 
         }}
@@ -70,7 +70,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
         />
 
         {/* Content Body */}
-        <div className="p-4 md:p-8 lg:p-10 max-w-[1600px] mx-auto w-full flex-1">
+        <div className="p-4 md:p-8 lg:p-10 max-w-[1600px] mx-auto w-full flex-1 min-w-0">
           {children}
         </div>
 
