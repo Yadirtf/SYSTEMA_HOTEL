@@ -1,49 +1,26 @@
 'use client';
 
 import { Mail, Lock, User, Phone, FileText, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
-import { useAuth } from '@/presentation/hooks/useAuth';
+import { ConfirmModal } from '@/presentation/components/ui/ConfirmModal';
+import { useRegisterAdminForm } from '@/presentation/hooks/useRegisterAdminForm';
 
 interface RegisterFormProps {
   onSuccess: () => void;
 }
 
-import { ConfirmModal } from '@/presentation/components/ui/ConfirmModal';
-
 export const RegisterAdminForm = ({ onSuccess }: RegisterFormProps) => {
-  const { registerAdmin, loading, error } = useAuth();
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    document: '',
-    phone: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert('Las claves no coinciden.');
-      return;
-    }
-    try {
-      await registerAdmin(formData);
-      setShowSuccess(true);
-    } catch (err) { }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const isFormValid = Object.values(formData).every(val => val !== '') &&
-    formData.password === formData.confirmPassword;
+  const {
+    formData,
+    handleChange,
+    handleSubmit,
+    isFormValid,
+    loading,
+    error,
+    showSuccess,
+    handleSuccessConfirm
+  } = useRegisterAdminForm(onSuccess);
 
   return (
     <div className="w-full space-y-8">
@@ -60,6 +37,7 @@ export const RegisterAdminForm = ({ onSuccess }: RegisterFormProps) => {
             icon={<User size={16} />}
             onChange={handleChange}
             required
+            value={formData.firstName}
           />
           <Input
             label="Apellido"
@@ -67,6 +45,7 @@ export const RegisterAdminForm = ({ onSuccess }: RegisterFormProps) => {
             icon={<User size={16} />}
             onChange={handleChange}
             required
+            value={formData.lastName}
           />
         </div>
 
@@ -77,6 +56,7 @@ export const RegisterAdminForm = ({ onSuccess }: RegisterFormProps) => {
             icon={<FileText size={16} />}
             onChange={handleChange}
             required
+            value={formData.document}
           />
           <Input
             label="Teléfono"
@@ -84,6 +64,7 @@ export const RegisterAdminForm = ({ onSuccess }: RegisterFormProps) => {
             icon={<Phone size={16} />}
             onChange={handleChange}
             required
+            value={formData.phone}
           />
         </div>
 
@@ -94,6 +75,7 @@ export const RegisterAdminForm = ({ onSuccess }: RegisterFormProps) => {
           icon={<Mail size={16} />}
           onChange={handleChange}
           required
+          value={formData.email}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -104,6 +86,7 @@ export const RegisterAdminForm = ({ onSuccess }: RegisterFormProps) => {
             icon={<Lock size={16} />}
             onChange={handleChange}
             required
+            value={formData.password}
           />
           <Input
             label="Confirmar"
@@ -112,6 +95,7 @@ export const RegisterAdminForm = ({ onSuccess }: RegisterFormProps) => {
             icon={<Lock size={16} />}
             onChange={handleChange}
             required
+            value={formData.confirmPassword}
           />
         </div>
 
@@ -138,11 +122,8 @@ export const RegisterAdminForm = ({ onSuccess }: RegisterFormProps) => {
         confirmText="Ir al Login"
         variant="success"
         showCancel={false}
-        onClose={() => { }} // Bloquéalo o permítele cerrar
-        onConfirm={() => {
-          setShowSuccess(false);
-          onSuccess();
-        }}
+        onClose={() => { }}
+        onConfirm={handleSuccessConfirm}
       />
     </div>
   );

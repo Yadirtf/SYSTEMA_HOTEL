@@ -57,36 +57,31 @@ export function requireRole(roles: string[]) {
 
     // 2. VERIFICACIÓN DE SEGURIDAD EN TIEMPO REAL (DB)
     try {
-      await dbConnect();
-      await dbConnect();
-      // console.log('DEBUG RoleGuard: Verifying user ID:', initialUser.id, 'Role:', initialUser.role);
-      const dbUser = await UserModel.findById(initialUser.id).populate('roleId');
+      await dbConnect(); // Aún necesitamos conectar a la BD, pero la lógica está abstraída
 
-      if (!dbUser) {
-        // console.log('DEBUG RoleGuard: User not found in DB', initialUser.id);
-        return { error: 'USER_NOT_FOUND', status: 401 };
+      // Instanciar dependencias manualmente (DI simple para este contexto)
+      // En una app más grande usaríamos un contenedor de inyección
+      const { MongoUserRepository } = await import('@/infrastructure/repositories/MongoUserRepository'); // Import dinámico para evitar ciclos si los hubiera
+      const userRepository = new MongoUserRepository();
+      const { AuthVerificationService } = await import('@/application/services/AuthVerificationService');
+      const authService = new AuthVerificationService(userRepository);
+
+      const result = await authService.verifyUser(initialUser.id, roles);
+
+      if (!result.isValid) {
+        return { error: result.error || 'UNAUTHORIZED', status: result.status || 401 };
       }
 
-      if (!dbUser.isActive) {
-        return { error: 'USER_INACTIVE', status: 403 };
-      }
-
-      if (dbUser.deletedAt) {
-        return { error: 'USER_DELETED', status: 403 };
-      }
-
-      // 3. Validar Rol (usando el del token o el de la DB, preferiblemente DB para estar al día)
-      // Asumimos que initialUser.role viene del token y coincide, pero si cambiaron roles en caliente,
-      // la DB es la verdad absoluta.
-      // Sin embargo, para no romper compatibilidad con `initialUser.role` (string) vs populated role,
-      // validaremos contra el token O refactorizaremos para usar el rol de la DB.
-
-      // Para mantener simplicidad y consistencia con el diseño actual que confía en el 'role' string del token:
-      if (!roles.includes(initialUser.role)) {
-        return { error: 'FORBIDDEN', status: 403 };
-      }
-
-      return { user: initialUser, error: null };
+      // El usuario es válido y tiene el rol correcto
+      // Retornamos los datos frescos de la BD (via servicio)
+      return {
+        user: {
+          id: result.user!.id,
+          email: result.user!.email,
+          role: result.user!.role
+        },
+        error: null
+      };
 
     } catch (error) {
       console.error('RoleGuard DB Error:', error);
