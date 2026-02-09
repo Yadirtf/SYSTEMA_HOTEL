@@ -2,12 +2,13 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { ProductCategory, Unit, Product, InventoryMovement, Sale } from '@/domain/entities/Store';
 
 export const useStore = () => {
-  const [categories, setCategories] = useState<any[]>([]);
-  const [units, setUnits] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
-  const [movements, setMovements] = useState<any[]>([]);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [movements, setMovements] = useState<InventoryMovement[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Helper para obtener headers con token
@@ -31,7 +32,7 @@ export const useStore = () => {
         setCategories([]);
         if (data.error) console.error('Error categories:', data.error);
       }
-    } catch (error) {
+    } catch {
       setCategories([]);
       toast.error('Error al cargar categorías');
     } finally {
@@ -39,7 +40,7 @@ export const useStore = () => {
     }
   }, [getHeaders]);
 
-  const createCategory = async (data: any) => {
+  const createCategory = async (data: Partial<ProductCategory>) => {
     try {
       const res = await fetch('/api/store/categories', {
         method: 'POST',
@@ -50,12 +51,12 @@ export const useStore = () => {
       if (!res.ok) throw new Error(result.error || 'Error al crear categoría');
       toast.success('Categoría creada');
       fetchCategories();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error desconocido');
     }
   };
 
-  const updateCategory = async (id: string, data: any) => {
+  const updateCategory = async (id: string, data: Partial<ProductCategory>) => {
     try {
       const res = await fetch(`/api/store/categories/${id}`, {
         method: 'PATCH',
@@ -66,8 +67,8 @@ export const useStore = () => {
       if (!res.ok) throw new Error(result.error || 'Error al actualizar categoría');
       toast.success('Categoría actualizada');
       fetchCategories();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error desconocido');
     }
   };
 
@@ -83,8 +84,8 @@ export const useStore = () => {
       }
       toast.success('Categoría eliminada');
       fetchCategories();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error desconocido');
     }
   };
 
@@ -99,7 +100,7 @@ export const useStore = () => {
       } else {
         setUnits([]);
       }
-    } catch (error) {
+    } catch {
       setUnits([]);
       toast.error('Error al cargar unidades');
     } finally {
@@ -107,7 +108,7 @@ export const useStore = () => {
     }
   }, [getHeaders]);
 
-  const createUnit = async (data: any) => {
+  const createUnit = async (data: Partial<Unit>) => {
     try {
       const res = await fetch('/api/store/units', {
         method: 'POST',
@@ -118,12 +119,12 @@ export const useStore = () => {
       if (!res.ok) throw new Error(result.error || 'Error al crear unidad');
       toast.success('Unidad creada');
       fetchUnits();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error desconocido');
     }
   };
 
-  const updateUnit = async (id: string, data: any) => {
+  const updateUnit = async (id: string, data: Partial<Unit>) => {
     try {
       const res = await fetch(`/api/store/units/${id}`, {
         method: 'PATCH',
@@ -134,8 +135,8 @@ export const useStore = () => {
       if (!res.ok) throw new Error(result.error || 'Error al actualizar unidad');
       toast.success('Unidad actualizada');
       fetchUnits();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error desconocido');
     }
   };
 
@@ -151,8 +152,8 @@ export const useStore = () => {
       }
       toast.success('Unidad eliminada');
       fetchUnits();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error desconocido');
     }
   };
 
@@ -167,7 +168,7 @@ export const useStore = () => {
       } else {
         setProducts([]);
       }
-    } catch (error) {
+    } catch {
       setProducts([]);
       toast.error('Error al conectar con el servidor');
     } finally {
@@ -175,7 +176,7 @@ export const useStore = () => {
     }
   }, [getHeaders]);
 
-  const createProduct = async (data: any) => {
+  const createProduct = async (data: Partial<Product>) => {
     try {
       const res = await fetch('/api/store/products', {
         method: 'POST',
@@ -186,12 +187,12 @@ export const useStore = () => {
       if (!res.ok) throw new Error(result.error || 'Error al crear producto');
       toast.success('Producto creado');
       fetchProducts();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error desconocido');
     }
   };
 
-  const updateProduct = async (id: string, data: any) => {
+  const updateProduct = async (id: string, data: Partial<Product>) => {
     try {
       const res = await fetch(`/api/store/products/${id}`, {
         method: 'PATCH',
@@ -202,8 +203,8 @@ export const useStore = () => {
       if (!res.ok) throw new Error(result.error || 'Error al actualizar producto');
       toast.success('Producto actualizado');
       fetchProducts();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error desconocido');
     }
   };
 
@@ -219,13 +220,13 @@ export const useStore = () => {
       }
       toast.success('Producto eliminado');
       fetchProducts();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error desconocido');
     }
   };
 
   // --- KARDEX ---
-  const fetchKardex = useCallback(async (filters = {}) => {
+  const fetchKardex = useCallback(async (filters: Record<string, string> = {}) => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams(filters);
@@ -236,7 +237,7 @@ export const useStore = () => {
       } else {
         setMovements([]);
       }
-    } catch (error) {
+    } catch {
       setMovements([]);
       toast.error('Error al cargar movimientos');
     } finally {
@@ -244,7 +245,7 @@ export const useStore = () => {
     }
   }, [getHeaders]);
 
-  const registerMovement = async (data: any) => {
+  const registerMovement = async (data: Partial<InventoryMovement>) => {
     try {
       const res = await fetch('/api/store/kardex', {
         method: 'POST',
@@ -256,8 +257,8 @@ export const useStore = () => {
       toast.success('Movimiento registrado');
       fetchKardex();
       fetchProducts();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error desconocido');
     }
   };
 
@@ -271,7 +272,7 @@ export const useStore = () => {
 };
 
 export const useSales = () => {
-  const [sales, setSales] = useState<any[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const getHeaders = useCallback(() => {
@@ -292,7 +293,7 @@ export const useSales = () => {
       } else {
         setSales([]);
       }
-    } catch (error) {
+    } catch {
       setSales([]);
       toast.error('Error al cargar ventas');
     } finally {
@@ -300,7 +301,7 @@ export const useSales = () => {
     }
   }, [getHeaders]);
 
-  const createSale = async (data: any) => {
+  const createSale = async (data: Partial<Sale>) => {
     try {
       const res = await fetch('/api/store/sales', {
         method: 'POST',
@@ -312,8 +313,8 @@ export const useSales = () => {
       toast.success('Venta registrada con éxito');
       fetchSales();
       return true;
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error desconocido');
       return false;
     }
   };

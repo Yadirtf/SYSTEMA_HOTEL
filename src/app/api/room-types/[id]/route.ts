@@ -17,8 +17,11 @@ export async function PATCH(
     const body = await request.json();
     await updateRoomTypeUseCase.execute({ id, ...body });
     return NextResponse.json({ message: 'Tipo de habitación actualizado correctamente' });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { status: 400 }
+    );
   }
 }
 
@@ -35,7 +38,10 @@ export async function DELETE(
   try {
     await deleteRoomTypeUseCase.execute(id);
     return NextResponse.json({ message: 'Tipo de habitación eliminado correctamente' });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { status: 400 }
+    );
   }
 }

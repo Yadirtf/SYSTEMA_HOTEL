@@ -6,15 +6,16 @@ import { DataTable, ColumnDef } from '@/presentation/components/ui/DataTable';
 import { FilterBar, FilterField } from '@/presentation/components/ui/FilterBar';
 import { FormDrawer, FormField } from '@/presentation/components/ui/FormDrawer';
 import { useStore } from '@/presentation/hooks/useStore';
-import { History, Plus, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { Plus, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { Button } from '@/presentation/components/ui/Button';
 import { cn } from '@/shared/utils';
+import { InventoryMovement, Product } from '@/domain/entities/Store';
 
 export default function KardexPage() {
-  const { 
+  const {
     movements, fetchKardex, registerMovement,
     products, fetchProducts,
-    isLoading 
+    isLoading
   } = useStore();
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -26,10 +27,10 @@ export default function KardexPage() {
     fetchProducts();
   }, [fetchKardex, fetchProducts]);
 
-  const columns: ColumnDef<any>[] = [
-    { 
-      header: 'Fecha', 
-      key: 'createdAt', 
+  const columns: ColumnDef<InventoryMovement>[] = [
+    {
+      header: 'Fecha',
+      key: 'createdAt',
       render: (row) => (
         <div className="flex flex-col">
           <span className="font-bold text-slate-900">{new Date(row.createdAt).toLocaleDateString()}</span>
@@ -37,18 +38,18 @@ export default function KardexPage() {
         </div>
       )
     },
-    { 
-      header: 'Producto', 
-      key: 'productId', 
+    {
+      header: 'Producto',
+      key: 'productId',
       render: (row) => (
         <span className="font-bold text-slate-900">
-          {products.find((p: any) => p.id === row.productId)?.name || 'Producto eliminado'}
+          {products.find((p: Product) => p.id === row.productId)?.name || 'Producto eliminado'}
         </span>
       )
     },
-    { 
-      header: 'Tipo', 
-      key: 'type', 
+    {
+      header: 'Tipo',
+      key: 'type',
       render: (row) => (
         <div className={cn(
           "inline-flex items-center gap-2 px-3 py-1 rounded-xl text-[10px] font-black tracking-tighter uppercase",
@@ -59,65 +60,65 @@ export default function KardexPage() {
         </div>
       )
     },
-    { 
-      header: 'Cant.', 
+    {
+      header: 'Cant.',
       key: 'quantity',
       align: 'center',
       render: (row) => <span className="font-black text-slate-900">{row.quantity}</span>
     },
-    { 
-      header: 'Costo Unit.', 
-      key: 'unitCost', 
-      render: (row) => <span className="font-medium text-slate-600">${row.unitCost.toFixed(2)}</span> 
+    {
+      header: 'Costo Unit.',
+      key: 'unitCost',
+      render: (row) => <span className="font-medium text-slate-600">${row.unitCost.toFixed(2)}</span>
     },
-    { 
-      header: 'Motivo', 
+    {
+      header: 'Motivo',
       key: 'reason',
       className: 'text-slate-500 italic text-xs'
     },
-    { 
-      header: 'Realizado por', 
-      key: 'performedBy', 
+    {
+      header: 'Realizado por',
+      key: 'performedBy',
       align: 'right',
       render: (row) => (
         <div className="flex flex-col items-end">
-          <span className="text-xs font-bold text-slate-700">{(row.performedBy as any)?.email?.split('@')[0]}</span>
+          <span className="text-xs font-bold text-slate-700">{(row.performedBy as any)?.email?.split('@')[0] || row.performedBy || 'Sist.'}</span>
           <span className="text-[10px] text-slate-400">@Sistema</span>
         </div>
-      ) 
+      )
     },
   ];
 
   const filterConfig: FilterField[] = [
-    { 
-      key: 'productId', 
-      label: 'Producto', 
-      type: 'select', 
-      options: Array.isArray(products) ? products.map((p: any) => ({ label: p.name, value: p.id })) : []
+    {
+      key: 'productId',
+      label: 'Producto',
+      type: 'select',
+      options: Array.isArray(products) ? products.map((p: Product) => ({ label: p.name, value: p.id })) : []
     },
-    { 
-      key: 'type', 
-      label: 'Tipo Movimiento', 
-      type: 'select', 
+    {
+      key: 'type',
+      label: 'Tipo Movimiento',
+      type: 'select',
       options: [
         { label: 'ENTRADAS', value: 'IN' },
         { label: 'SALIDAS', value: 'OUT' }
-      ] 
+      ]
     },
   ];
 
   const formFields: FormField[] = [
-    { 
-      key: 'productId', 
-      label: 'Producto', 
-      type: 'select', 
+    {
+      key: 'productId',
+      label: 'Producto',
+      type: 'select',
       required: true,
-      options: Array.isArray(products) ? products.map((p: any) => ({ label: p.name, value: p.id })) : []
+      options: Array.isArray(products) ? products.map((p: Product) => ({ label: p.name, value: p.id })) : []
     },
-    { 
-      key: 'type', 
-      label: 'Tipo de Movimiento', 
-      type: 'select', 
+    {
+      key: 'type',
+      label: 'Tipo de Movimiento',
+      type: 'select',
       required: true,
       options: [
         { label: 'ENTRADA (Compra / Ajuste +)', value: 'IN' },
@@ -129,36 +130,37 @@ export default function KardexPage() {
     { key: 'reason', label: 'Motivo / Referencia', type: 'text', required: true },
   ];
 
-  const filteredMovements = Array.isArray(movements) ? movements : [];
+  // Cast movements to InventoryMovement[] safely in case useStore returns any
+  const filteredMovements = (Array.isArray(movements) ? movements : []) as InventoryMovement[];
 
   return (
     <div className="space-y-8">
-      <PageHeader 
-        title="Kardex de Inventario" 
+      <PageHeader
+        title="Kardex de Inventario"
         subtitle="Registro histórico de todas las entradas y salidas"
         actions={
           <>
-             <Button 
-               variant="secondary" 
-               onClick={() => setIsFilterOpen(!isFilterOpen)}
-               className={cn("h-12 rounded-xl", isFilterOpen && "bg-slate-900 text-white")}
-             >
+            <Button
+              variant="secondary"
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className={cn("h-12 rounded-xl", isFilterOpen && "bg-slate-900 text-white")}
+            >
               Filtros
             </Button>
             <Button onClick={() => setIsCreateOpen(true)} className="h-12 rounded-xl">
-              <Plus size={18} className="mr-2" /> 
+              <Plus size={18} className="mr-2" />
               Registrar Movimiento
             </Button>
           </>
         }
       />
 
-      <FilterBar 
+      <FilterBar
         isOpen={isFilterOpen}
         config={filterConfig}
         filters={filters}
         onFilterChange={(newFilters) => {
-          setFilters(newFilters);
+          setFilters(newFilters as any);
           fetchKardex(newFilters);
         }}
         onClear={() => {
@@ -168,7 +170,7 @@ export default function KardexPage() {
       />
 
       <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden p-4">
-        <DataTable 
+        <DataTable
           columns={columns}
           data={filteredMovements}
           isLoading={isLoading}
@@ -181,7 +183,7 @@ export default function KardexPage() {
                       {new Date(row.createdAt).toLocaleDateString()} {new Date(row.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                     <h4 className="font-bold text-slate-900 leading-tight truncate pr-2">
-                      {products.find((p: any) => p.id === row.productId)?.name || 'Producto eliminado'}
+                      {products.find((p: Product) => p.id === row.productId)?.name || 'Producto eliminado'}
                     </h4>
                   </div>
                   <div className={cn(
@@ -208,7 +210,7 @@ export default function KardexPage() {
               <div className="flex items-center justify-between pt-1">
                 <p className="text-[10px] text-slate-500 italic line-clamp-1 flex-1 pr-4">"{row.reason}"</p>
                 <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter shrink-0 bg-slate-50 px-2 py-0.5 rounded-md">
-                  {(row.performedBy as any)?.email?.split('@')[0] || 'Sist.'}
+                  {(row.performedBy as any)?.email?.split('@')[0] || row.performedBy || 'Sist.'}
                 </span>
               </div>
             </div>
@@ -216,7 +218,7 @@ export default function KardexPage() {
         />
       </div>
 
-      <FormDrawer 
+      <FormDrawer
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         title="Registrar Movimiento"

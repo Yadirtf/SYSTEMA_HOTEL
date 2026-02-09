@@ -4,7 +4,7 @@ import { dbConnect } from '@/infrastructure/db/mongo/connection';
 import { requireRole } from '@/infrastructure/security/RoleGuard';
 
 export async function PATCH(
-  req: Request, 
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -16,16 +16,17 @@ export async function PATCH(
     const data = await req.json();
     const product = await productUseCases.executeUpdate(id, data);
     return NextResponse.json(product);
-  } catch (error: any) {
-    if (error.message === 'BARCODE_ALREADY_EXISTS') {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Error desconocido';
+    if (message === 'BARCODE_ALREADY_EXISTS') {
       return NextResponse.json({ error: 'El código de barras ya está registrado en otro producto.' }, { status: 400 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function DELETE(
-  req: Request, 
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -36,7 +37,10 @@ export async function DELETE(
     await dbConnect();
     await productUseCases.executeDelete(id);
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { status: 500 }
+    );
   }
 }

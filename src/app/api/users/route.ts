@@ -11,8 +11,11 @@ export async function GET(request: Request) {
   try {
     const users = await listUsersUseCase.execute();
     return NextResponse.json(users);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { status: 500 }
+    );
   }
 }
 
@@ -25,7 +28,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     await createUserUseCase.execute(body);
     return NextResponse.json({ message: 'Usuario creado correctamente' }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { status: 400 }
+    );
   }
 }

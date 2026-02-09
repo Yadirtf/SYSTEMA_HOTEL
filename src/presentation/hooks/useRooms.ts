@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { Room } from '@/domain/entities/Room';
 
 export const useRooms = (floorId?: string) => {
-  const [rooms, setRooms] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchRooms = useCallback(async () => {
@@ -16,18 +17,18 @@ export const useRooms = (floorId?: string) => {
       });
       const data = await res.json();
       if (res.ok) setRooms(data);
-    } catch (err) {
+    } catch {
       toast.error('Error al cargar habitaciones');
     } finally {
       setLoading(false);
     }
   }, [floorId]);
 
-  const createRoom = async (dto: any) => {
+  const createRoom = async (dto: Partial<Room>) => {
     try {
       const res = await fetch('/api/rooms', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
@@ -38,8 +39,8 @@ export const useRooms = (floorId?: string) => {
         throw new Error(data.error || 'Error al crear habitación');
       }
       await fetchRooms();
-    } catch (err: any) {
-      throw err;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Error desconocido');
     }
   };
 
@@ -47,7 +48,7 @@ export const useRooms = (floorId?: string) => {
     try {
       const res = await fetch(`/api/rooms/${id}`, {
         method: 'PATCH',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
@@ -58,8 +59,8 @@ export const useRooms = (floorId?: string) => {
         throw new Error(data.error || 'Error al actualizar habitación');
       }
       await fetchRooms();
-    } catch (err: any) {
-      throw err;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Error desconocido');
     }
   };
 
@@ -74,8 +75,8 @@ export const useRooms = (floorId?: string) => {
         throw new Error(data.error || 'Error al eliminar habitación');
       }
       await fetchRooms();
-    } catch (err: any) {
-      throw err;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Error desconocido');
     }
   };
 

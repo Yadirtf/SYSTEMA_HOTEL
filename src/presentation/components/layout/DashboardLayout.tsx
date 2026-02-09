@@ -4,11 +4,14 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { ConfirmModal as SessionConfirmModal } from '@/presentation/components/ui/ConfirmModal';
+
+import { SessionUser } from '@/presentation/types/SessionUser';
 
 export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SessionUser | null>(null);
   const router = useRouter();
 
   // 1. Detectar tamaño de pantalla para comportamiento responsivo
@@ -25,14 +28,51 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 2. Cargar información de usuario
+  // 2. Cargar información de usuario y VERIFICAR SESIÓN
+  const [sessionError, setSessionError] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
+
   useEffect(() => {
-    const userInfo = localStorage.getItem('user_info');
-    if (!userInfo) {
-      router.push('/');
-    } else {
-      setUser(JSON.parse(userInfo));
-    }
+    const verifySession = async () => {
+      const userInfo = localStorage.getItem('user_info');
+      const token = localStorage.getItem('auth_token');
+
+      if (!userInfo || !token) {
+        router.push('/');
+        return;
+      }
+
+      try {
+        // Verificar validez del token y estado del usuario en BD
+        // Invocamos una ruta protegida por el Proxy + RoleGuard
+        const res = await fetch('/api/verify-session', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          // console.error('Verify Session Error Details:', errorData); // Removed to avoid production panic
+
+          let message = 'Tu sesión ha expirado o no es válida.';
+          if (errorData.error === 'USER_NOT_FOUND') message = 'Tu cuenta de usuario no existe en la base de datos.';
+          else if (errorData.error === 'USER_INACTIVE') message = 'Tu cuenta ha sido desactivada por un administrador.';
+          else if (errorData.error === 'USER_DELETED') message = 'Tu cuenta ha sido eliminada.';
+          else if (errorData.error === 'INVALID_TOKEN' || errorData.error === 'UNAUTHORIZED') message = 'Tu sesión ha caducado. Por favor inicia sesión nuevamente.';
+
+          setSessionError({ show: true, message });
+          // No redirigimos inmediatamente, esperamos a que el usuario cierre el modal
+          return;
+        }
+
+        setUser(JSON.parse(userInfo));
+      } catch (error) {
+        console.error('Session verification failed:', error);
+        setSessionError({ show: true, message: 'Error de conexión verificando tu sesión.' });
+      }
+    };
+
+    verifySession();
   }, [router]);
 
   const handleLogout = () => {
@@ -41,28 +81,45 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
     router.push('/');
   };
 
+  const handleSessionErrorConfirm = () => {
+    setSessionError({ show: false, message: '' });
+    handleLogout();
+  };
+
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   return (
     <div className="min-h-screen bg-slate-50 flex overflow-x-hidden">
+      {/* Modal de Error de Sesión */}
+      <SessionConfirmModal
+        isOpen={sessionError.show}
+        title="Sesión Terminada"
+        description={sessionError.message}
+        confirmText="Ir al Login"
+        variant="danger"
+        showCancel={false}
+        onClose={handleSessionErrorConfirm}
+        onConfirm={handleSessionErrorConfirm}
+      />
+
       {/* Componente Sidebar Refactorizado */}
-      <Sidebar 
-        isOpen={isSidebarOpen} 
-        isMobile={isMobile} 
-        user={user} 
+      <Sidebar
+        isOpen={isSidebarOpen}
+        isMobile={isMobile}
+        user={user}
         onClose={() => setIsSidebarOpen(false)}
         onLogout={handleLogout}
       />
 
       {/* Main Content Area */}
-      <main 
+      <main
         className="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-[0.16, 1, 0.3, 1] min-w-0"
-        style={{ 
-          paddingLeft: !isMobile ? (isSidebarOpen ? 280 : 80) : 0 
+        style={{
+          paddingLeft: !isMobile ? (isSidebarOpen ? 280 : 80) : 0
         }}
       >
         {/* Componente Header Refactorizado */}
-        <Header 
+        <Header
           isSidebarOpen={isSidebarOpen}
           isMobile={isMobile}
           user={user}

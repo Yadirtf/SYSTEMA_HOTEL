@@ -2,7 +2,7 @@ import { StoreRepository } from "@/domain/repositories/StoreRepository";
 import { ProductCategory, Unit, Product, InventoryMovement, Sale } from "@/domain/entities/Store";
 
 export class CategoryUseCases {
-  constructor(private repository: StoreRepository) {}
+  constructor(private repository: StoreRepository) { }
 
   async executeCreate(data: Partial<ProductCategory>) {
     return await this.repository.createCategory(data);
@@ -22,7 +22,7 @@ export class CategoryUseCases {
 }
 
 export class UnitUseCases {
-  constructor(private repository: StoreRepository) {}
+  constructor(private repository: StoreRepository) { }
 
   async executeCreate(data: Partial<Unit>) {
     return await this.repository.createUnit(data);
@@ -42,7 +42,7 @@ export class UnitUseCases {
 }
 
 export class ProductUseCases {
-  constructor(private repository: StoreRepository) {}
+  constructor(private repository: StoreRepository) { }
 
   async executeCreate(data: Partial<Product> & { performedBy?: string }) {
     // 1. Validar código de barras único si se proporciona
@@ -93,15 +93,15 @@ export class ProductUseCases {
 }
 
 export class KardexUseCases {
-  constructor(private repository: StoreRepository) {}
+  constructor(private repository: StoreRepository) { }
 
   async executeRegister(data: Partial<InventoryMovement>) {
     // 1. Registrar el movimiento inmutable
     const movement = await this.repository.registerMovement(data);
-    
+
     // 2. Calcular impacto en stock (IN suma, OUT resta)
     const stockImpact = data.type === 'IN' ? data.quantity! : -data.quantity!;
-    
+
     // 3. Actualizar el cache de stock en el producto
     await this.repository.updateStock(data.productId!, stockImpact);
 
@@ -114,13 +114,13 @@ export class KardexUseCases {
 }
 
 export class SaleUseCases {
-  constructor(private repository: StoreRepository) {}
+  constructor(private repository: StoreRepository) { }
 
   async executeCreate(data: Partial<Sale>) {
     // 1. Validaciones previas por cada producto
     for (const item of data.items!) {
-      const product = await this.repository.findProductById(item.productId as any);
-      
+      const product = await this.repository.findProductById(item.productId);
+
       if (!product) {
         throw new Error(`PRODUCT_NOT_FOUND:${item.productId}`);
       }

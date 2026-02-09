@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { LoginUserDTO } from '@/application/dtos/LoginUserDTO';
+import { RegisterAdminDTO } from '@/application/dtos/RegisterAdminDTO';
 
 export function useAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const login = async (credentials: any) => {
+  const login = async (credentials: LoginUserDTO) => {
     setLoading(true);
     setError(null);
     try {
@@ -15,21 +17,22 @@ export function useAuth() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error en el login');
-      
+
       // Guardar token (para simplicidad usaremos localStorage en Fase 0)
       localStorage.setItem('auth_token', data.token);
       localStorage.setItem('user_info', JSON.stringify(data.user));
-      
+
       return data;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error desconocido';
+      setError(message);
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  const registerAdmin = async (data: any) => {
+  const registerAdmin = async (data: RegisterAdminDTO) => {
     setLoading(true);
     setError(null);
     try {
@@ -41,8 +44,9 @@ export function useAuth() {
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || 'Error en el registro');
       return result;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error desconocido';
+      setError(message);
       throw err;
     } finally {
       setLoading(false);

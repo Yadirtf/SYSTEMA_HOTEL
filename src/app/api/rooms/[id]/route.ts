@@ -19,8 +19,11 @@ export async function PATCH(
       await updateRoomStatusUseCase.execute(id, body.status);
     }
     return NextResponse.json({ message: 'Estado de habitación actualizado' });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { status: 400 }
+    );
   }
 }
 
@@ -37,8 +40,11 @@ export async function DELETE(
   try {
     await deleteRoomUseCase.execute(id);
     return NextResponse.json({ message: 'Habitación eliminada correctamente' });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { status: 400 }
+    );
   }
 }
 

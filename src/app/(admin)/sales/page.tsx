@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+import { useEffect, useState, useMemo } from 'react';
 import { useStore, useSales } from '@/presentation/hooks/useStore';
 import { ProductCatalog } from '@/presentation/components/features/sales/ProductCatalog';
 import { CartSidebar } from '@/presentation/components/features/sales/CartSidebar';
@@ -10,61 +10,28 @@ import { toast } from 'sonner';
 import { ShoppingCart, ArrowLeft } from 'lucide-react';
 import { Button } from '@/presentation/components/ui/Button';
 
+import { Product } from '@/domain/entities/Store';
+
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+  maxStock: number;
+}
+
 export default function SalesPage() {
   const { products, fetchProducts } = useStore();
   const { createSale, isLoading } = useSales();
-  
+
   // Estado del POS
-  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [search, setSearch] = useState('');
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [showMobileCart, setShowMobileCart] = useState(false); // Estado para móvil
 
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
-
-  // Lógica de Escaneo Global (Mejora UX)
-  useEffect(() => {
-    let buffer = '';
-    let lastKeyTime = Date.now();
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const currentTime = Date.now();
-      
-      // Los scanners son muy rápidos, si el tiempo entre teclas es > 50ms, es un humano escribiendo
-      if (currentTime - lastKeyTime > 50) {
-        buffer = '';
-      }
-
-      if (e.key === 'Enter') {
-        if (buffer.length > 3) { // Código de barras mínimo
-          handleBarcodeScan(buffer);
-          buffer = '';
-        }
-      } else if (e.key !== 'Shift') {
-        buffer += e.key;
-      }
-
-      lastKeyTime = currentTime;
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [products]); // Re-suscribir cuando los productos carguen
-
-  // Filtrado de productos para el catálogo
-  const filteredProducts = useMemo(() => {
-    if (!Array.isArray(products)) return [];
-    const s = search.toLowerCase();
-    return products.filter(p => 
-      p.name.toLowerCase().includes(s) || 
-      (p.barcode && p.barcode.includes(s))
-    );
-  }, [products, search]);
-
   // Lógica del Carrito
-  const addToCart = (product: any) => {
+  const addToCart = (product: Product) => {
     setCartItems(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
@@ -72,16 +39,16 @@ export default function SalesPage() {
           toast.warning(`No hay más stock de ${product.name}`);
           return prev;
         }
-        return prev.map(item => 
+        return prev.map(item =>
           item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
         );
       }
-      return [...prev, { 
-        id: product.id, 
-        name: product.name, 
-        price: product.salePrice, 
+      return [...prev, {
+        id: product.id,
+        name: product.name,
+        price: product.salePrice,
         quantity: 1,
-        maxStock: product.currentStock 
+        maxStock: product.currentStock
       }];
     });
   };
@@ -122,7 +89,7 @@ export default function SalesPage() {
     }
   };
 
-  const handleConfirmSale = async (paymentMethod: string, receivedAmount: number) => {
+  const handleConfirmSale = async (paymentMethod: 'CASH' | 'TRANSFER' | 'CARD', receivedAmount: number) => {
     const saleData = {
       items: cartItems.map(item => ({
         productId: item.id,
@@ -143,6 +110,49 @@ export default function SalesPage() {
     }
   };
 
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  // Lógica de Escaneo Global (Mejora UX)
+  useEffect(() => {
+    let buffer = '';
+    let lastKeyTime = Date.now();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const currentTime = Date.now();
+
+      // Los scanners son muy rápidos, si el tiempo entre teclas es > 50ms, es un humano escribiendo
+      if (currentTime - lastKeyTime > 50) {
+        buffer = '';
+      }
+
+      if (e.key === 'Enter') {
+        if (buffer.length > 3) { // Código de barras mínimo
+          handleBarcodeScan(buffer);
+          buffer = '';
+        }
+      } else if (e.key !== 'Shift') {
+        buffer += e.key;
+      }
+
+      lastKeyTime = currentTime;
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [products]); // Re-suscribir cuando los productos carguen
+
+  // Filtrado de productos para el catálogo
+  const filteredProducts = useMemo(() => {
+    if (!Array.isArray(products)) return [];
+    const s = search.toLowerCase();
+    return products.filter(p =>
+      p.name.toLowerCase().includes(s) ||
+      (p.barcode && p.barcode.includes(s))
+    );
+  }, [products, search]);
+
   const total = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
   return (
@@ -150,7 +160,7 @@ export default function SalesPage() {
       <div className="flex flex-col lg:flex-row gap-8 h-full">
         {/* Columna Principal: Catálogo */}
         <div className={`flex-1 min-w-0 h-full flex flex-col transition-all duration-300 ${showMobileCart ? 'hidden lg:flex' : 'flex'}`}>
-          <ProductCatalog 
+          <ProductCatalog
             products={filteredProducts}
             onAddToCart={addToCart}
             search={search}
@@ -168,7 +178,7 @@ export default function SalesPage() {
         `}>
           {/* Header móvil para cerrar carrito */}
           <div className="lg:hidden p-6 bg-white border-b border-slate-100 flex items-center gap-4">
-            <button 
+            <button
               onClick={() => setShowMobileCart(false)}
               className="p-2 rounded-xl bg-slate-100 text-slate-600"
             >
@@ -178,7 +188,7 @@ export default function SalesPage() {
           </div>
 
           <div className="h-[calc(100%-76px)] lg:h-full p-4 lg:p-0">
-            <CartSidebar 
+            <CartSidebar
               items={cartItems}
               onUpdateQuantity={updateQuantity}
               onRemoveItem={removeItem}
@@ -192,7 +202,7 @@ export default function SalesPage() {
       {/* Floating Action Button (Móvil) */}
       {!showMobileCart && cartItems.length > 0 && (
         <div className="lg:hidden fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] z-30">
-          <Button 
+          <Button
             onClick={() => setShowMobileCart(true)}
             className="w-full h-16 rounded-2xl bg-slate-900 text-white shadow-2xl flex items-center justify-between px-6"
           >
@@ -211,7 +221,7 @@ export default function SalesPage() {
       )}
 
       {/* Modal de Finalización */}
-      <CheckoutModal 
+      <CheckoutModal
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
         total={cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0)}

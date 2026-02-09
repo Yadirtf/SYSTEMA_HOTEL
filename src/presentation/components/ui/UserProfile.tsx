@@ -3,8 +3,10 @@
 import { User as UserIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+import { SessionUser } from '@/presentation/types/SessionUser';
+
 interface UserProfileProps {
-  user: any;
+  user: SessionUser | null;
 }
 
 export const UserProfile = ({ user }: UserProfileProps) => {
@@ -20,7 +22,7 @@ export const UserProfile = ({ user }: UserProfileProps) => {
           {user.role}
         </p>
       </div>
-      <motion.div 
+      <motion.div
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="h-10 w-10 bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 rounded-xl flex items-center justify-center shadow-inner cursor-pointer"

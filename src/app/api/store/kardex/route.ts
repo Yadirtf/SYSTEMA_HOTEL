@@ -12,8 +12,11 @@ export async function GET(req: Request) {
     await dbConnect();
     const movements = await kardexUseCases.executeList({ productId, type });
     return NextResponse.json(movements);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { status: 500 }
+    );
   }
 }
 
@@ -24,16 +27,19 @@ export async function POST(req: Request) {
 
     await dbConnect();
     const data = await req.json();
-    
+
     // Asignar el usuario que realiza el movimiento desde el token
     const movement = await kardexUseCases.executeRegister({
       ...data,
-      performedBy: guard.user.sub // El ID del usuario está en el sub del token JWT
+      performedBy: guard.user?.sub // El ID del usuario está en el sub del token JWT
     });
 
     return NextResponse.json(movement, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { status: 500 }
+    );
   }
 }
 

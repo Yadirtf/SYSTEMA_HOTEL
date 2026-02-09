@@ -1,16 +1,18 @@
 'use client';
 
-import { RoomStatus } from '@/domain/entities/Room';
+import { Room, RoomStatus } from '@/domain/entities/Room';
+import { RoomType } from '@/domain/entities/RoomType';
+import { Floor } from '@/domain/entities/Floor';
 import { cn } from '@/shared/utils';
 import { motion } from 'framer-motion';
 import { Home, Users, Settings, Edit3, MoreHorizontal } from 'lucide-react';
 
 interface RoomCardProps {
-  room: any;
-  roomType: any;
-  floor: any;
-  onEdit?: (room: any) => void;
-  onStatusChange?: (room: any, status: RoomStatus) => void;
+  room: Room;
+  roomType?: RoomType;
+  floor?: Floor;
+  onEdit?: (room: Room) => void;
+  onStatusChange?: (room: Room, status: RoomStatus) => void;
 }
 
 const statusConfig = {
@@ -47,7 +49,7 @@ export const RoomCard = ({ room, roomType, floor, onEdit }: RoomCardProps) => {
             </p>
           </div>
         </div>
-        
+
         <div className={cn(
           "px-3 py-1 rounded-full flex items-center gap-1.5 border shadow-sm",
           config.bg, config.border
@@ -85,7 +87,7 @@ export const RoomCard = ({ room, roomType, floor, onEdit }: RoomCardProps) => {
 
       {/* Acciones */}
       <div className="flex gap-2">
-        <button 
+        <button
           onClick={() => onEdit?.(room)}
           className="flex-1 h-10 bg-slate-900 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-slate-200"
         >

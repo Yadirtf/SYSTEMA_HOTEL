@@ -25,8 +25,8 @@ interface FormDrawerProps {
   title: string;
   description?: string;
   fields: FormField[];
-  initialData?: any;
-  onSubmit: (data: any) => Promise<void>;
+  initialData?: Record<string, any>;
+  onSubmit: (data: Record<string, any>) => Promise<void>;
   loading?: boolean;
 }
 
@@ -40,7 +40,7 @@ export function FormDrawer({
   onSubmit,
   loading = false,
 }: FormDrawerProps) {
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export function FormDrawer({
       setFormData(initialData);
     } else {
       // Inicializar con valores vacíos según los campos
-      const initial: any = {};
+      const initial: Record<string, any> = {};
       fields.forEach(f => initial[f.key] = '');
       setFormData(initial);
     }
@@ -62,8 +62,8 @@ export function FormDrawer({
       finalValue = value.replace(/\D/g, '');
     }
 
-    setFormData((prev: any) => ({ ...prev, [key]: finalValue }));
-    
+    setFormData((prev: Record<string, any>) => ({ ...prev, [key]: finalValue }));
+
     if (errors[key]) {
       const newErrors = { ...errors };
       delete newErrors[key];
@@ -76,7 +76,7 @@ export function FormDrawer({
     try {
       await onSubmit(formData);
       onClose();
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
     }
   };

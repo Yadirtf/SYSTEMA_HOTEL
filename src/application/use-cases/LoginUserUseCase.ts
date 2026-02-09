@@ -8,7 +8,7 @@ export class LoginUserUseCase {
     private userRepository: UserRepository,
     private passwordHasher: PasswordHasher,
     private tokenService: TokenService
-  ) {}
+  ) { }
 
   async execute(data: LoginUserDTO) {
     const user = await this.userRepository.findByEmail(data.email);
@@ -26,9 +26,10 @@ export class LoginUserUseCase {
     }
 
     const role = await this.userRepository.findRoleById(user.roleId);
-    
+
     const token = this.tokenService.generate({
       sub: user.id,
+      id: user.id, // RoleGuard espera 'id'
       email: user.email,
       role: role?.name || 'USER'
     });

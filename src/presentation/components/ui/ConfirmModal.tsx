@@ -1,8 +1,9 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle, X, CheckCircle2 } from 'lucide-react';
 import { Button } from './Button';
+import { cn } from '@/shared/utils';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -12,8 +13,9 @@ interface ConfirmModalProps {
   description: string;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'danger' | 'warning' | 'primary';
+  variant?: 'danger' | 'warning' | 'primary' | 'success';
   isLoading?: boolean;
+  showCancel?: boolean;
 }
 
 export const ConfirmModal = ({
@@ -25,7 +27,8 @@ export const ConfirmModal = ({
   confirmText = 'Confirmar',
   cancelText = 'Cancelar',
   variant = 'danger',
-  isLoading = false
+  isLoading = false,
+  showCancel = true
 }: ConfirmModalProps) => {
   return (
     <AnimatePresence>
@@ -51,12 +54,12 @@ export const ConfirmModal = ({
               <div className="flex justify-between items-start mb-6">
                 <div className={cn(
                   "p-3 rounded-2xl",
-                  variant === 'danger' ? "bg-red-50 text-red-600" : 
-                  variant === 'warning' ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-blue-600"
+                  variant === 'danger' ? "bg-red-50 text-red-600" :
+                    variant === 'warning' ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-blue-600"
                 )}>
-                  <AlertTriangle size={24} />
+                  {variant === 'success' ? <CheckCircle2 size={24} /> : <AlertTriangle size={24} />}
                 </div>
-                <button 
+                <button
                   onClick={onClose}
                   className="p-2 hover:bg-slate-100 rounded-full transition-colors"
                 >
@@ -70,21 +73,24 @@ export const ConfirmModal = ({
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button 
-                  variant="secondary" 
-                  onClick={onClose}
-                  className="flex-1 rounded-xl h-12"
-                  disabled={isLoading}
-                >
-                  {cancelText}
-                </Button>
-                <Button 
+                {showCancel && (
+                  <Button
+                    variant="secondary"
+                    onClick={onClose}
+                    className="flex-1 rounded-xl h-12"
+                    disabled={isLoading}
+                  >
+                    {cancelText}
+                  </Button>
+                )}
+                <Button
                   variant={variant === 'danger' ? 'primary' : 'primary'} // Ajustar según estilos globales
                   onClick={onConfirm}
                   isLoading={isLoading}
                   className={cn(
                     "flex-1 rounded-xl h-12",
-                    variant === 'danger' && "bg-red-600 hover:bg-red-700 shadow-red-100"
+                    variant === 'danger' && "bg-red-600 hover:bg-red-700 shadow-red-100",
+                    variant === 'success' && "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100"
                   )}
                 >
                   {confirmText}
@@ -98,5 +104,5 @@ export const ConfirmModal = ({
   );
 };
 
-import { cn } from '@/shared/utils';
+
 

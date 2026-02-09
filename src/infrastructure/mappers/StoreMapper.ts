@@ -8,8 +8,8 @@ export class StoreMapper {
       name: doc.name,
       description: doc.description,
       isActive: doc.isActive,
-      createdAt: (doc as any).createdAt,
-      updatedAt: (doc as any).updatedAt,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
     };
   }
 
@@ -19,24 +19,30 @@ export class StoreMapper {
       name: doc.name,
       abbreviation: doc.abbreviation,
       isActive: doc.isActive,
-      createdAt: (doc as any).createdAt,
-      updatedAt: (doc as any).updatedAt,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
     };
   }
 
-  static toProductEntity(doc: any): Product {
+  static toProductEntity(doc: ProductDocument): Product {
     const rawDoc = doc.toObject ? doc.toObject() : doc;
+    // Helper type for potentially populated fields
+    type PopulatedDoc = typeof rawDoc & {
+      categoryId?: { _id: string; name: string } | string;
+      unitId?: { _id: string; name: string } | string;
+    };
+    const docWithPopulated = rawDoc as PopulatedDoc;
     return {
       id: rawDoc._id.toString(),
       name: rawDoc.name,
       description: rawDoc.description,
       // Intentar obtener de barcode o del campo crudo por si Mongoose lo oculta
-      barcode: rawDoc.barcode || doc.barcode || rawDoc.sku || doc.sku || '',
+      barcode: rawDoc.barcode || (docWithPopulated as any).barcode || (docWithPopulated as any).sku || '',
       // Manejar campos poblados (populate) o IDs directos
-      categoryId: rawDoc.categoryId?._id?.toString() || rawDoc.categoryId?.toString(),
-      categoryName: rawDoc.categoryId?.name, // Extraer nombre si está poblado
-      unitId: rawDoc.unitId?._id?.toString() || rawDoc.unitId?.toString(),
-      unitName: rawDoc.unitId?.name, // Extraer nombre si está poblado
+      categoryId: (typeof docWithPopulated.categoryId === 'object' && docWithPopulated.categoryId) ? docWithPopulated.categoryId._id.toString() : docWithPopulated.categoryId?.toString(),
+      categoryName: (typeof docWithPopulated.categoryId === 'object' && docWithPopulated.categoryId) ? docWithPopulated.categoryId.name : undefined,
+      unitId: (typeof docWithPopulated.unitId === 'object' && docWithPopulated.unitId) ? docWithPopulated.unitId._id.toString() : docWithPopulated.unitId?.toString(),
+      unitName: (typeof docWithPopulated.unitId === 'object' && docWithPopulated.unitId) ? docWithPopulated.unitId.name : undefined,
       purchasePrice: rawDoc.purchasePrice,
       salePrice: rawDoc.salePrice,
       currentStock: rawDoc.currentStock,
@@ -46,33 +52,43 @@ export class StoreMapper {
     };
   }
 
-  static toMovementEntity(doc: any): InventoryMovement {
+  static toMovementEntity(doc: InventoryMovementDocument): InventoryMovement {
+    const docWithPopulated = doc as unknown as {
+      productId?: { _id: string; name: string } | string;
+      performedBy?: { _id: string; email: string } | string;
+    };
     return {
       id: doc._id.toString(),
-      productId: doc.productId?._id?.toString() || doc.productId?.toString(),
+      productId: (typeof docWithPopulated.productId === 'object' && docWithPopulated.productId) ? docWithPopulated.productId._id.toString() : docWithPopulated.productId?.toString() || '',
       type: doc.type,
       quantity: doc.quantity,
       unitCost: doc.unitCost,
       reason: doc.reason,
       reference: doc.reference,
-      performedBy: doc.performedBy?._id?.toString() || doc.performedBy?.toString(),
-      createdAt: (doc as any).createdAt,
+      performedBy: (typeof docWithPopulated.performedBy === 'object' && docWithPopulated.performedBy) ? docWithPopulated.performedBy._id.toString() : docWithPopulated.performedBy?.toString() || '',
+      createdAt: doc.createdAt,
     };
   }
 
-  static toSaleEntity(doc: any): Sale {
+  static toSaleEntity(doc: SaleDocument): Sale {
+    const docWithPopulated = doc as unknown as {
+      performedBy?: { _id: string; email: string } | string;
+    };
     return {
       id: doc._id.toString(),
-      items: doc.items.map((item: any) => ({
-        productId: item.productId?._id?.toString() || item.productId?.toString(),
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        total: item.total
-      })),
+      items: doc.items.map((item) => {
+        const itemWithPopulated = item as unknown as { productId?: { _id: string } | string };
+        return {
+          productId: (typeof itemWithPopulated.productId === 'object' && itemWithPopulated.productId) ? itemWithPopulated.productId._id.toString() : itemWithPopulated.productId?.toString() || '',
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          total: item.total
+        };
+      }),
       totalAmount: doc.totalAmount,
       paymentMethod: doc.paymentMethod,
-      performedBy: doc.performedBy?._id?.toString() || doc.performedBy?.toString(),
-      createdAt: (doc as any).createdAt,
+      performedBy: (typeof docWithPopulated.performedBy === 'object' && docWithPopulated.performedBy) ? docWithPopulated.performedBy._id.toString() : docWithPopulated.performedBy?.toString() || '',
+      createdAt: doc.createdAt,
     };
   }
 }

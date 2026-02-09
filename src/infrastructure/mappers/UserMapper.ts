@@ -1,9 +1,12 @@
 import { User } from '../../domain/entities/User';
 import { Role } from '../../domain/entities/Role';
 import { Person } from '../../domain/entities/Person';
+import { IUserSchema } from '../db/mongo/models/UserModel';
+import { IRoleSchema } from '../db/mongo/models/RoleModel';
+import { IPersonSchema } from '../db/mongo/models/PersonModel';
 
 export class UserMapper {
-  static toDomain(userSchema: any): User {
+  static toDomain(userSchema: IUserSchema): User {
     return new User(
       userSchema._id.toString(),
       userSchema.email,
@@ -12,11 +15,11 @@ export class UserMapper {
       userSchema.isActive,
       userSchema.createdAt,
       userSchema.updatedAt,
-      userSchema.deletedAt
+      userSchema.deletedAt || null
     );
   }
 
-  static roleToDomain(roleSchema: any): Role {
+  static roleToDomain(roleSchema: IRoleSchema): Role {
     return new Role(
       roleSchema._id.toString(),
       roleSchema.name,
@@ -26,7 +29,7 @@ export class UserMapper {
     );
   }
 
-  static personToDomain(personSchema: any): Person {
+  static personToDomain(personSchema: IPersonSchema): Person {
     return new Person(
       personSchema._id.toString(),
       personSchema.userId.toString(),

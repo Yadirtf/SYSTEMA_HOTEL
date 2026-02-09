@@ -1,5 +1,5 @@
 export interface TokenService {
-  generate(payload: any): string;
-  verify(token: string): any;
+  generate(payload: Record<string, unknown>): string;
+  verify(token: string): Record<string, unknown> | null;
 }
 

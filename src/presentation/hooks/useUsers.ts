@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { User } from '@/domain/entities/User';
+import { UserWithDetails } from '@/presentation/types/UserWithDetails';
 
 export function useUsers() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<UserWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,19 +17,19 @@ export function useUsers() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al cargar usuarios');
       setUsers(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setLoading(false);
     }
   };
 
-  const createUser = async (userData: any) => {
+  const createUser = async (userData: Partial<User>) => {
     try {
       const token = localStorage.getItem('auth_token');
       const res = await fetch('/api/users', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
@@ -37,8 +39,8 @@ export function useUsers() {
       if (!res.ok) throw new Error(data.error || 'Error al crear usuario');
       await fetchUsers();
       return data;
-    } catch (err: any) {
-      throw err;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Error desconocido');
     }
   };
 
@@ -54,8 +56,8 @@ export function useUsers() {
         throw new Error(data.error || 'Error al eliminar usuario');
       }
       await fetchUsers();
-    } catch (err: any) {
-      throw err;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Error desconocido');
     }
   };
 
@@ -64,7 +66,7 @@ export function useUsers() {
       const token = localStorage.getItem('auth_token');
       const res = await fetch(`/api/users/${id}`, {
         method: 'PATCH',
-        headers: { 
+        headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
@@ -75,17 +77,17 @@ export function useUsers() {
         throw new Error(data.error || 'Error al actualizar usuario');
       }
       await fetchUsers();
-    } catch (err: any) {
-      throw err;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Error desconocido');
     }
   };
 
-  const updateUser = async (userData: any) => {
+  const updateUser = async (userData: Partial<User> & { id: string }) => {
     try {
       const token = localStorage.getItem('auth_token');
       const res = await fetch(`/api/users/${userData.id}`, {
         method: 'PATCH',
-        headers: { 
+        headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
@@ -96,8 +98,8 @@ export function useUsers() {
         throw new Error(data.error || 'Error al actualizar usuario');
       }
       await fetchUsers();
-    } catch (err: any) {
-      throw err;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Error desconocido');
     }
   };
 

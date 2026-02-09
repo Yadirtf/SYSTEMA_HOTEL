@@ -8,8 +8,11 @@ export async function GET() {
     await dbConnect();
     const units = await unitUseCases.executeList();
     return NextResponse.json(units);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { status: 500 }
+    );
   }
 }
 
@@ -22,8 +25,11 @@ export async function POST(req: Request) {
     const data = await req.json();
     const unit = await unitUseCases.executeCreate(data);
     return NextResponse.json(unit, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { status: 500 }
+    );
   }
 }
 

@@ -12,69 +12,70 @@ import { cn } from '@/shared/utils';
 import { FilterBar, FilterField } from '@/presentation/components/ui/FilterBar';
 import { toast } from 'sonner';
 import { FormDrawer, FormField } from '@/presentation/components/ui/FormDrawer';
+import { Room } from '@/domain/entities/Room';
 
 export default function RoomsPage() {
   const { floors } = useFloors();
   const { roomTypes } = useRoomTypes();
   const [selectedFloorId, setSelectedFloorId] = useState<string | null>(null);
   const { rooms, loading, fetchRooms, createRoom, updateRoomStatus } = useRooms(selectedFloorId || undefined);
-  
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [editData, setEditData] = useState<any>(null);
+  const [editData, setEditData] = useState<Room | null>(null);
   const [filters, setFilters] = useState({ status: '', typeId: '' });
-  
+
   // Configuración de Filtros
   const filterConfig: FilterField[] = [
-    { 
-      key: 'status', 
-      label: 'Estado operativo', 
-      type: 'select', 
+    {
+      key: 'status',
+      label: 'Estado operativo',
+      type: 'select',
       options: [
         { label: 'DISPONIBLE', value: 'AVAILABLE' },
         { label: 'OCUPADA', value: 'OCCUPIED' },
         { label: 'RESERVADA', value: 'RESERVED' },
         { label: 'LIMPIEZA', value: 'CLEANING' },
         { label: 'MANTENIMIENTO', value: 'MAINTENANCE' }
-      ] 
+      ]
     },
-    { 
-      key: 'typeId', 
-      label: 'Tipo de Habitación', 
-      type: 'select', 
+    {
+      key: 'typeId',
+      label: 'Tipo de Habitación',
+      type: 'select',
       options: roomTypes.map(t => ({ label: t.name, value: t.id }))
     }
   ];
 
   // Configuración de Formulario (Dynamic FormDrawer)
   const roomFormFields: FormField[] = [
-    { 
-      key: 'code', 
-      label: 'Código / Número', 
-      type: 'text', 
-      placeholder: 'Ej. 101', 
-      icon: <Home size={18}/>, 
+    {
+      key: 'code',
+      label: 'Código / Número',
+      type: 'text',
+      placeholder: 'Ej. 101',
+      icon: <Home size={18} />,
       required: true,
       colSpan: 2
     },
-    { 
-      key: 'floorId', 
-      label: 'Piso / Nivel', 
-      type: 'select', 
+    {
+      key: 'floorId',
+      label: 'Piso / Nivel',
+      type: 'select',
       required: true,
       options: floors.map(f => ({ label: `Piso ${f.number}`, value: f.id }))
     },
-    { 
-      key: 'typeId', 
-      label: 'Categoría', 
-      type: 'select', 
+    {
+      key: 'typeId',
+      label: 'Categoría',
+      type: 'select',
       required: true,
       options: roomTypes.map(t => ({ label: t.name, value: t.id }))
     },
-    { 
-      key: 'status', 
-      label: 'Estado Actual', 
-      type: 'select', 
+    {
+      key: 'status',
+      label: 'Estado Actual',
+      type: 'select',
       required: true,
       options: [
         { label: 'Disponible', value: 'AVAILABLE' },
@@ -82,14 +83,14 @@ export default function RoomsPage() {
         { label: 'Reservada', value: 'RESERVED' },
         { label: 'Limpieza', value: 'CLEANING' },
         { label: 'Mantenimiento', value: 'MAINTENANCE' }
-      ] 
+      ]
     },
-    { 
-      key: 'description', 
-      label: 'Descripción (Opcional)', 
-      type: 'textarea', 
-      placeholder: 'Ej. Vista al mar, cama king...', 
-      colSpan: 2 
+    {
+      key: 'description',
+      label: 'Descripción (Opcional)',
+      type: 'textarea',
+      placeholder: 'Ej. Vista al mar, cama king...',
+      colSpan: 2
     }
   ];
 
@@ -101,7 +102,7 @@ export default function RoomsPage() {
     });
   }, [rooms, filters]);
 
-  const handleSave = async (data: any) => {
+  const handleSave = async (data: Record<string, any>) => {
     try {
       if (editData) {
         // En esta fase solo actualizamos el estado si es necesario, 
@@ -110,7 +111,7 @@ export default function RoomsPage() {
         await updateRoomStatus(editData.id, data.status);
         toast.success('Habitación actualizada correctamente');
       } else {
-        await createRoom(data);
+        await createRoom(data as any);
         toast.success('Habitación creada correctamente');
       }
       setIsDrawerOpen(false);
@@ -122,8 +123,8 @@ export default function RoomsPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader 
-        title="Inventario de Habitaciones" 
+      <PageHeader
+        title="Inventario de Habitaciones"
         subtitle="Monitoreo en tiempo real y gestión operativa."
         actions={
           <>
@@ -143,8 +144,8 @@ export default function RoomsPage() {
           onClick={() => setSelectedFloorId(null)}
           className={cn(
             "px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shrink-0 border",
-            !selectedFloorId 
-              ? "bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-200" 
+            !selectedFloorId
+              ? "bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-200"
               : "bg-white text-slate-400 border-slate-100 hover:border-slate-200"
           )}
         >
@@ -156,8 +157,8 @@ export default function RoomsPage() {
             onClick={() => setSelectedFloorId(floor.id)}
             className={cn(
               "px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shrink-0 border",
-              selectedFloorId === floor.id 
-                ? "bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-200" 
+              selectedFloorId === floor.id
+                ? "bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-200"
                 : "bg-white text-slate-400 border-slate-100 hover:border-slate-200"
             )}
           >
@@ -166,11 +167,11 @@ export default function RoomsPage() {
         ))}
       </div>
 
-      <FilterBar 
+      <FilterBar
         isOpen={isFilterOpen}
         config={filterConfig}
         filters={filters}
-        onFilterChange={setFilters}
+        onFilterChange={(val) => setFilters(val as any)}
         onClear={() => setFilters({ status: '', typeId: '' })}
       />
 
@@ -184,9 +185,9 @@ export default function RoomsPage() {
       ) : filteredRooms.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredRooms.map((room) => (
-            <RoomCard 
-              key={room.id} 
-              room={room} 
+            <RoomCard
+              key={room.id}
+              room={room}
               roomType={roomTypes.find(t => t.id === room.typeId)}
               floor={floors.find(f => f.id === room.floorId)}
               onEdit={(r) => {
@@ -210,7 +211,7 @@ export default function RoomsPage() {
         title={editData ? 'Gestionar Habitación' : 'Nueva Habitación'}
         description={editData ? `Actualizando habitación #${editData.code}` : 'Configure una nueva unidad en el inventario.'}
         fields={roomFormFields}
-        initialData={editData}
+        initialData={editData ?? undefined}
         onSubmit={handleSave}
       />
     </div>

@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { Floor } from '@/domain/entities/Floor';
 
 export const useFloors = () => {
-  const [floors, setFloors] = useState<any[]>([]);
+  const [floors, setFloors] = useState<Floor[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchFloors = async () => {
@@ -15,18 +16,18 @@ export const useFloors = () => {
       });
       const data = await res.json();
       if (res.ok) setFloors(data);
-    } catch (err) {
+    } catch {
       toast.error('Error al cargar pisos');
     } finally {
       setLoading(false);
     }
   };
 
-  const createFloor = async (dto: any) => {
+  const createFloor = async (dto: Partial<Floor>) => {
     try {
       const res = await fetch('/api/floors', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
@@ -37,16 +38,16 @@ export const useFloors = () => {
         throw new Error(data.error || 'Error al crear piso');
       }
       await fetchFloors();
-    } catch (err: any) {
-      throw err;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Error desconocido');
     }
   };
 
-  const updateFloor = async (id: string, dto: any) => {
+  const updateFloor = async (id: string, dto: Partial<Floor>) => {
     try {
       const res = await fetch(`/api/floors/${id}`, {
         method: 'PATCH',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
@@ -57,8 +58,8 @@ export const useFloors = () => {
         throw new Error(data.error || 'Error al actualizar piso');
       }
       await fetchFloors();
-    } catch (err: any) {
-      throw err;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Error desconocido');
     }
   };
 
@@ -73,8 +74,8 @@ export const useFloors = () => {
         throw new Error(data.error || 'Error al eliminar piso');
       }
       await fetchFloors();
-    } catch (err: any) {
-      throw err;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Error desconocido');
     }
   };
 

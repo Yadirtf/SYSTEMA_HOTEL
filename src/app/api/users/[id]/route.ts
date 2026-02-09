@@ -16,8 +16,11 @@ export async function DELETE(
   try {
     await deleteUserUseCase.execute(id);
     return NextResponse.json({ message: 'Usuario eliminado correctamente' });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { status: 400 }
+    );
   }
 }
 
@@ -33,7 +36,7 @@ export async function PATCH(
 
   try {
     const body = await request.json();
-    
+
     // Si SOLO viene isActive (caso del botón rápido de la tabla), usamos UpdateUserStatusUseCase
     // Si vienen más campos (caso del FormDrawer), usamos UpdateUserUseCase
     const keys = Object.keys(body);
@@ -44,7 +47,10 @@ export async function PATCH(
     }
 
     return NextResponse.json({ message: 'Usuario actualizado correctamente' });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error desconocido' },
+      { status: 400 }
+    );
   }
 }

@@ -1,8 +1,8 @@
 'use client';
 
-import { 
-  Trash2, 
-  CheckCircle, 
+import {
+  Trash2,
+  CheckCircle,
   XCircle,
   User as UserIcon,
   Mail,
@@ -12,18 +12,20 @@ import { Button } from '@/presentation/components/ui/Button';
 import { DataTable, ColumnDef } from '@/presentation/components/ui/DataTable';
 import { cn } from '@/shared/utils';
 
+import { UserWithDetails } from '@/presentation/types/UserWithDetails';
+
 interface UserTableProps {
-  users: any[];
-  onToggleStatus: (user: any) => void;
-  onDelete: (user: any) => void;
-  onEdit: (user: any) => void;
+  users: UserWithDetails[];
+  onToggleStatus: (user: UserWithDetails) => void;
+  onDelete: (user: UserWithDetails) => void;
+  onEdit: (user: UserWithDetails) => void;
   isLoading: boolean;
 }
 
 export const UserTable = ({ users, onToggleStatus, onDelete, onEdit, isLoading }: UserTableProps) => {
-  
+
   // 1. Definición de Columnas para Desktop
-  const columns: ColumnDef<any>[] = [
+  const columns: ColumnDef<UserWithDetails>[] = [
     {
       header: 'Colaborador',
       key: 'name',
@@ -45,8 +47,8 @@ export const UserTable = ({ users, onToggleStatus, onDelete, onEdit, isLoading }
       render: (user) => (
         <span className={cn(
           "px-3 py-1.5 rounded-xl text-[9px] font-extrabold tracking-[0.1em] uppercase border shadow-sm",
-          user.role === 'ADMIN' 
-            ? "bg-slate-900 text-white border-slate-900" 
+          user.role === 'ADMIN'
+            ? "bg-slate-900 text-white border-slate-900"
             : "bg-white text-slate-600 border-slate-200"
         )}>
           {user.role}
@@ -78,22 +80,22 @@ export const UserTable = ({ users, onToggleStatus, onDelete, onEdit, isLoading }
       align: 'right',
       render: (user) => (
         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             className="h-9 w-9 p-0 rounded-xl hover:bg-white hover:shadow-md border-none"
             onClick={() => onEdit(user)}
           >
             <UserIcon size={16} className="text-slate-600" />
           </Button>
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             className="h-9 w-9 p-0 rounded-xl hover:bg-white hover:shadow-md border-none"
             onClick={() => onToggleStatus(user)}
           >
             {user.isActive ? <XCircle className="h-4 w-4 text-slate-400" /> : <CheckCircle className="h-4 w-4 text-emerald-500" />}
           </Button>
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             className="h-9 w-9 p-0 rounded-xl hover:bg-red-50 hover:text-red-600 border-none hover:shadow-md transition-all"
             onClick={() => onDelete(user)}
           >
@@ -105,7 +107,7 @@ export const UserTable = ({ users, onToggleStatus, onDelete, onEdit, isLoading }
   ];
 
   // 2. Template para Vista Móvil
-  const renderMobileCard = (user: any) => (
+  const renderMobileCard = (user: UserWithDetails) => (
     <div className="bg-white rounded-[2rem] border border-slate-100 p-6 shadow-sm space-y-6">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
@@ -159,10 +161,10 @@ export const UserTable = ({ users, onToggleStatus, onDelete, onEdit, isLoading }
   );
 
   return (
-    <DataTable 
-      data={users} 
-      columns={columns} 
-      isLoading={isLoading} 
+    <DataTable
+      data={users}
+      columns={columns}
+      isLoading={isLoading}
       emptyMessage="No se encontraron colaboradores"
       renderMobileCard={renderMobileCard}
     />

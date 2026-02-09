@@ -11,18 +11,20 @@ import { ShoppingBag, Plus, Barcode, Edit, Trash2, Power } from 'lucide-react';
 import { Button } from '@/presentation/components/ui/Button';
 import { cn } from '@/shared/utils';
 
+import { Product, ProductCategory, Unit } from '@/domain/entities/Store';
+
 export default function ProductsPage() {
-  const { 
+  const {
     products, fetchProducts, createProduct, updateProduct, deleteProduct,
     categories, fetchCategories,
     units, fetchUnits,
-    isLoading 
+    isLoading
   } = useStore();
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [deletingProduct, setDeletingProduct] = useState<any>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
   const [filters, setFilters] = useState({ search: '', categoryId: '' });
 
   useEffect(() => {
@@ -32,9 +34,9 @@ export default function ProductsPage() {
   }, [fetchProducts, fetchCategories, fetchUnits]);
 
   // Configuración de Columnas
-  const columns: ColumnDef<any>[] = [
-    { 
-      header: 'Producto', 
+  const columns: ColumnDef<Product>[] = [
+    {
+      header: 'Producto',
       key: 'name',
       render: (row) => (
         <div className="flex flex-col">
@@ -43,9 +45,9 @@ export default function ProductsPage() {
         </div>
       )
     },
-    { 
-      header: 'Código', 
-      key: 'barcode', 
+    {
+      header: 'Código',
+      key: 'barcode',
       render: (row) => (
         <div className="flex items-center gap-2 text-slate-500">
           <Barcode size={14} className="opacity-50" />
@@ -53,53 +55,53 @@ export default function ProductsPage() {
         </div>
       )
     },
-    { 
-      header: 'Categoría', 
-      key: 'categoryId', 
-      render: (row) => categories.find((c: any) => c.id === row.categoryId)?.name || 'Sin categoría' 
+    {
+      header: 'Categoría',
+      key: 'categoryId',
+      render: (row) => categories.find((c: ProductCategory) => c.id === row.categoryId)?.name || 'Sin categoría'
     },
-    { 
-      header: 'Stock', 
-      key: 'currentStock', 
+    {
+      header: 'Stock',
+      key: 'currentStock',
       render: (row) => (
         <span className={cn(
           "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border",
-          row.currentStock <= 5 
-            ? "bg-rose-50 text-rose-600 border-rose-100" 
+          row.currentStock <= 5
+            ? "bg-rose-50 text-rose-600 border-rose-100"
             : "bg-emerald-50 text-emerald-600 border-emerald-100"
         )}>
-          {row.currentStock} {units.find((u: any) => u.id === row.unitId)?.abbreviation}
+          {row.currentStock} {units.find((u: Unit) => u.id === row.unitId)?.abbreviation}
         </span>
       )
     },
-    { 
-      header: 'Precio Venta', 
-      key: 'salePrice', 
-      render: (row) => <span className="font-bold text-slate-900">${row.salePrice.toFixed(2)}</span> 
+    {
+      header: 'Precio Venta',
+      key: 'salePrice',
+      render: (row) => <span className="font-bold text-slate-900">${row.salePrice.toFixed(2)}</span>
     },
     {
       header: 'Acciones',
-      key: 'actions',
+      key: 'id',
       align: 'right',
       render: (row) => (
         <div className="flex justify-end gap-2">
-          <Button 
-            variant="ghost" 
-            className="h-8 w-8 p-0" 
+          <Button
+            variant="ghost"
+            className="h-8 w-8 p-0"
             onClick={() => { setEditingProduct(row); setIsCreateOpen(true); }}
           >
             <Edit size={14} className="text-blue-500" />
           </Button>
-          <Button 
-            variant="ghost" 
-            className="h-8 w-8 p-0" 
+          <Button
+            variant="ghost"
+            className="h-8 w-8 p-0"
             onClick={() => updateProduct(row.id, { isActive: !row.isActive })}
           >
             <Power size={14} className={row.isActive ? "text-emerald-500" : "text-slate-300"} />
           </Button>
-          <Button 
-            variant="ghost" 
-            className="h-8 w-8 p-0" 
+          <Button
+            variant="ghost"
+            className="h-8 w-8 p-0"
             onClick={() => setDeletingProduct(row)}
           >
             <Trash2 size={14} className="text-rose-500" />
@@ -112,37 +114,37 @@ export default function ProductsPage() {
   // Configuración de Filtros
   const filterConfig: FilterField[] = [
     { key: 'search', label: 'Buscar Producto', type: 'search', placeholder: 'Nombre o Código...' },
-    { 
-      key: 'categoryId', 
-      label: 'Categoría', 
-      type: 'select', 
-      options: Array.isArray(categories) ? categories.map((c: any) => ({ label: c.name, value: c.id })) : []
+    {
+      key: 'categoryId',
+      label: 'Categoría',
+      type: 'select',
+      options: Array.isArray(categories) ? categories.map((c: ProductCategory) => ({ label: c.name, value: c.id })) : []
     },
   ];
 
   // Configuración de Formulario
   const formFields: FormField[] = [
     { key: 'name', label: 'Nombre del Producto', type: 'text' as const, required: true },
-    { 
-      key: 'barcode', 
-      label: 'Código de Barras (Opcional)', 
-      type: 'text' as const, 
+    {
+      key: 'barcode',
+      label: 'Código de Barras (Opcional)',
+      type: 'text' as const,
       icon: <Barcode size={18} />,
       onlyNumbers: true // Validación limpia: solo números
     },
-    { 
-      key: 'categoryId', 
-      label: 'Categoría', 
-      type: 'select' as const, 
+    {
+      key: 'categoryId',
+      label: 'Categoría',
+      type: 'select' as const,
       required: true,
-      options: Array.isArray(categories) ? categories.map((c: any) => ({ label: c.name, value: c.id })) : []
+      options: Array.isArray(categories) ? categories.map((c: ProductCategory) => ({ label: c.name, value: c.id })) : []
     },
-    { 
-      key: 'unitId', 
-      label: 'Unidad de Medida', 
-      type: 'select' as const, 
+    {
+      key: 'unitId',
+      label: 'Unidad de Medida',
+      type: 'select' as const,
       required: true,
-      options: Array.isArray(units) ? units.map((u: any) => ({ label: `${u.name} (${u.abbreviation})`, value: u.id })) : []
+      options: Array.isArray(units) ? units.map((u: Unit) => ({ label: `${u.name} (${u.abbreviation})`, value: u.id })) : []
     },
     // Solo mostrar Stock Inicial al crear, no al editar (el stock se maneja por Kardex)
     ...(!editingProduct ? [{ key: 'currentStock', label: 'Stock Inicial', type: 'number' as const, required: true }] : []),
@@ -151,32 +153,32 @@ export default function ProductsPage() {
     { key: 'description', label: 'Descripción', type: 'text' as const, colSpan: 2 },
   ];
 
-  const handleProductSubmit = async (data: any) => {
+  const handleProductSubmit = async (data: Record<string, any>) => {
     if (editingProduct) {
       await updateProduct(editingProduct.id, data);
     } else {
-      await createProduct(data);
+      await createProduct(data as any);
     }
     setIsCreateOpen(false);
     setEditingProduct(null);
   };
 
-  const filteredProducts = Array.isArray(products) ? products.filter((p: any) => {
-    const matchSearch = p.name.toLowerCase().includes(filters.search.toLowerCase()) || 
-                         (p.barcode && p.barcode.toLowerCase().includes(filters.search.toLowerCase()));
+  const filteredProducts = Array.isArray(products) ? products.filter((p: Product) => {
+    const matchSearch = p.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+      (p.barcode && p.barcode.toLowerCase().includes(filters.search.toLowerCase()));
     const matchCategory = !filters.categoryId || p.categoryId === filters.categoryId;
     return matchSearch && matchCategory;
   }) : [];
 
   return (
     <div className="space-y-8">
-      <PageHeader 
-        title="Gestión de Tienda" 
+      <PageHeader
+        title="Gestión de Tienda"
         subtitle="Catálogo de productos y control de inventario"
         actions={
           <>
-             <Button 
-              variant="secondary" 
+            <Button
+              variant="secondary"
               onClick={() => setIsFilterOpen(!isFilterOpen)}
               className={cn("h-12 rounded-xl", isFilterOpen && "bg-slate-900 text-white")}
             >
@@ -189,16 +191,16 @@ export default function ProductsPage() {
         }
       />
 
-      <FilterBar 
+      <FilterBar
         isOpen={isFilterOpen}
         config={filterConfig}
         filters={filters}
-        onFilterChange={setFilters}
+        onFilterChange={(val) => setFilters(val as any)}
         onClear={() => setFilters({ search: '', categoryId: '' })}
       />
 
       <div className="bg-white rounded-[2.5rem] border border-slate-100 p-4 shadow-sm">
-        <DataTable 
+        <DataTable
           columns={columns}
           data={filteredProducts}
           isLoading={isLoading}
@@ -220,7 +222,7 @@ export default function ProductsPage() {
                   Stock: {row.currentStock}
                 </span>
               </div>
-              
+
               <div className="flex items-center gap-2 text-slate-500 text-[11px] font-mono">
                 <Barcode size={14} className="opacity-50" />
                 {row.barcode || 'Sin código'}
@@ -245,24 +247,26 @@ export default function ProductsPage() {
         />
       </div>
 
-      <FormDrawer 
+      <FormDrawer
         isOpen={isCreateOpen}
         onClose={() => { setIsCreateOpen(false); setEditingProduct(null); }}
         title={editingProduct ? "Editar Producto" : "Nuevo Producto"}
-        initialData={editingProduct}
+        initialData={editingProduct ?? undefined}
         fields={formFields}
         onSubmit={handleProductSubmit}
       />
 
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={!!deletingProduct}
         title="¿Eliminar producto?"
         description={`Esta acción eliminará "${deletingProduct?.name}" permanentemente del catálogo.`}
         confirmText="Eliminar permanentemente"
         onClose={() => setDeletingProduct(null)}
         onConfirm={async () => {
-          await deleteProduct(deletingProduct.id);
-          setDeletingProduct(null);
+          if (deletingProduct) {
+            await deleteProduct(deletingProduct.id);
+            setDeletingProduct(null);
+          }
         }}
       />
     </div>

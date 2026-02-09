@@ -5,6 +5,8 @@ export interface ProductCategoryDocument extends Document {
   name: string;
   description?: string;
   isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const ProductCategorySchema = new Schema<ProductCategoryDocument>({
@@ -20,6 +22,8 @@ export interface UnitDocument extends Document {
   name: string;
   abbreviation: string;
   isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const UnitSchema = new Schema<UnitDocument>({
@@ -41,12 +45,14 @@ export interface ProductDocument extends Document {
   salePrice: number;
   currentStock: number;
   isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const ProductSchema = new Schema<ProductDocument>({
   name: { type: String, required: true },
   description: { type: String },
-  barcode: { type: String, sparse: true, unique: true }, 
+  barcode: { type: String, sparse: true, unique: true },
   categoryId: { type: Schema.Types.ObjectId, ref: 'ProductCategory', required: true },
   unitId: { type: Schema.Types.ObjectId, ref: 'Unit', required: true },
   purchasePrice: { type: Number, required: true, default: 0 },
@@ -70,6 +76,8 @@ export interface InventoryMovementDocument extends Document {
   reason: string;
   reference?: string;
   performedBy: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const InventoryMovementSchema = new Schema<InventoryMovementDocument>({
@@ -95,6 +103,8 @@ export interface SaleDocument extends Document {
   totalAmount: number;
   paymentMethod: 'CASH' | 'TRANSFER' | 'CARD';
   performedBy: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const SaleSchema = new Schema<SaleDocument>({

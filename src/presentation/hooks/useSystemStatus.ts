@@ -11,7 +11,7 @@ export function useSystemStatus() {
       const res = await fetch('/api/auth/system-status');
       const data = await res.json();
       setInitialized(data.initialized);
-    } catch (err) {
+    } catch {
       setError('Error al conectar con el servidor');
     } finally {
       setLoading(false);

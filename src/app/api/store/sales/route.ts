@@ -20,31 +20,32 @@ export async function POST(req: Request) {
 
     await dbConnect();
     const data = await req.json();
-    
+
     const sale = await saleUseCases.executeCreate({
       ...data,
-      performedBy: guard.user.sub
+      performedBy: guard.user?.sub
     });
 
     return NextResponse.json(sale, { status: 201 });
-  } catch (error: any) {
-    let message = error.message;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Error desconocido';
     let status = 500;
+    let errorMessage = message;
 
-    if (error.message.startsWith('PRODUCT_NOT_FOUND')) {
-      message = 'Uno de los productos no existe.';
+    if (message.startsWith('PRODUCT_NOT_FOUND')) {
+      errorMessage = 'Uno de los productos no existe.';
       status = 400;
-    } else if (error.message.startsWith('PRODUCT_INACTIVE')) {
-      const productName = error.message.split(':')[1];
-      message = `El producto "${productName}" está desactivado y no se puede vender.`;
+    } else if (message.startsWith('PRODUCT_INACTIVE')) {
+      const productName = message.split(':')[1];
+      errorMessage = `El producto "${productName}" está desactivado y no se puede vender.`;
       status = 400;
-    } else if (error.message.startsWith('INSUFFICIENT_STOCK')) {
-      const productName = error.message.split(':')[1];
-      message = `Stock insuficiente para el producto "${productName}".`;
+    } else if (message.startsWith('INSUFFICIENT_STOCK')) {
+      const productName = message.split(':')[1];
+      errorMessage = `Stock insuficiente para el producto "${productName}".`;
       status = 400;
     }
 
-    return NextResponse.json({ error: message }, { status });
+    return NextResponse.json({ error: errorMessage }, { status });
   }
 }
 

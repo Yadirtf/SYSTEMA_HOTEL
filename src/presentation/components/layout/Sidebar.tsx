@@ -1,10 +1,10 @@
 'use client';
 
-import { 
-  Users, 
-  LayoutDashboard, 
-  Hotel, 
-  LogOut, 
+import {
+  Users,
+  LayoutDashboard,
+  Hotel,
+  LogOut,
   X,
   User as UserIcon,
   ChevronRight,
@@ -22,9 +22,12 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { cn } from '@/shared/utils';
 
+import { LucideIcon } from 'lucide-react';
+import { SessionUser } from '@/presentation/types/SessionUser';
+
 interface MenuItem {
   name: string;
-  icon: any;
+  icon: LucideIcon;
   href?: string;
   roles?: string[];
   submenu?: { name: string; href: string; roles?: string[] }[];
@@ -33,7 +36,7 @@ interface MenuItem {
 interface SidebarProps {
   isOpen: boolean;
   isMobile: boolean;
-  user: any;
+  user: SessionUser | null;
   onClose: () => void;
   onLogout: () => void;
 }
@@ -44,18 +47,18 @@ export const Sidebar = ({ isOpen, isMobile, user, onClose, onLogout }: SidebarPr
 
   const menuItems: MenuItem[] = [
     { name: 'Resumen', icon: LayoutDashboard, href: '/dashboard' },
-    { 
-      name: 'Habitaciones', 
-      icon: Hotel, 
+    {
+      name: 'Habitaciones',
+      icon: Hotel,
       submenu: [
         { name: 'Inventario', href: '/rooms' },
         { name: 'Pisos', href: '/floors', roles: ['ADMIN'] },
         { name: 'Categorías', href: '/room-types', roles: ['ADMIN'] },
       ]
     },
-    { 
-      name: 'Tienda', 
-      icon: ShoppingBag, 
+    {
+      name: 'Tienda',
+      icon: ShoppingBag,
       submenu: [
         { name: 'Catálogo', href: '/products' },
         { name: 'Ventas', href: '/sales' },
@@ -68,7 +71,7 @@ export const Sidebar = ({ isOpen, isMobile, user, onClose, onLogout }: SidebarPr
 
   // Auto-abrir menús basados en la ruta actual
   useEffect(() => {
-    const currentMenu = menuItems.find(item => 
+    const currentMenu = menuItems.find(item =>
       item.submenu?.some(sub => pathname === sub.href)
     );
     if (currentMenu) {
@@ -80,17 +83,17 @@ export const Sidebar = ({ isOpen, isMobile, user, onClose, onLogout }: SidebarPr
     setOpenMenus(prev => ({ ...prev, [name]: !prev[name] }));
   };
 
-  const filteredMenu = menuItems.filter(item => 
+  const filteredMenu = menuItems.filter(item =>
     !item.roles || (user && item.roles.includes(user.role))
   );
 
   const sidebarVariants: any = {
-    open: { 
+    open: {
       width: 280,
       x: 0,
       transition: { duration: 0.3, ease: "easeOut" }
     },
-    closed: { 
+    closed: {
       width: isMobile ? 0 : 80,
       x: isMobile ? -280 : 0,
       transition: { duration: 0.3, ease: "easeOut" }
@@ -155,7 +158,7 @@ export const Sidebar = ({ isOpen, isMobile, user, onClose, onLogout }: SidebarPr
                     </div>
                   </Link>
                 ) : (
-                  <div 
+                  <div
                     onClick={() => toggleSubmenu(item.name)}
                     className={cn(
                       "flex items-center gap-3 px-3 py-3 rounded-xl transition-all group cursor-pointer",
@@ -211,7 +214,7 @@ export const Sidebar = ({ isOpen, isMobile, user, onClose, onLogout }: SidebarPr
               </div>
             </div>
           )}
-          <button 
+          <button
             onClick={onLogout}
             className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-400 hover:bg-red-400/10 transition-all group"
           >

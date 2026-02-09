@@ -13,47 +13,48 @@ import { FilterBar, FilterField } from '@/presentation/components/ui/FilterBar';
 import { EditUserDrawer } from '@/presentation/components/features/EditUserDrawer';
 import { FormDrawer, FormField } from '@/presentation/components/ui/FormDrawer';
 import { cn } from '@/shared/utils';
+import { UserWithDetails } from '@/presentation/types/UserWithDetails';
 
 export default function UsersManagementPage() {
   const { users, loading, fetchUsers, deleteUser, toggleUserStatus, createUser } = useUsers();
-  
+
   // 1. Configuración de Filtros Dinámicos
   const userFilterConfig: FilterField[] = [
     { key: 'search', label: 'Búsqueda General', type: 'search', placeholder: 'Nombre o email...' },
-    { 
-      key: 'role', 
-      label: 'Rol de Acceso', 
-      type: 'select', 
+    {
+      key: 'role',
+      label: 'Rol de Acceso',
+      type: 'select',
       options: [
         { label: 'ADMIN', value: 'ADMIN' },
         { label: 'RECEPCIONISTA', value: 'RECEPCIONISTA' },
         { label: 'LIMPIEZA', value: 'LIMPIEZA' }
-      ] 
+      ]
     },
-    { 
-      key: 'isActive', 
-      label: 'Estado de Cuenta', 
-      type: 'select', 
+    {
+      key: 'isActive',
+      label: 'Estado de Cuenta',
+      type: 'select',
       options: [
         { label: 'ACTIVOS', value: 'true' },
         { label: 'INACTIVOS', value: 'false' }
-      ] 
+      ]
     },
     { key: 'document', label: 'Identificación', type: 'text', placeholder: 'DNI / Pasaporte...' },
   ];
 
   // Configuración de Formulario de Creación (Nuevo estándar)
   const createUserFields: FormField[] = [
-    { key: 'firstName', label: 'Nombre', type: 'text', icon: <UserIcon size={18}/>, required: true },
-    { key: 'lastName', label: 'Apellido', type: 'text', icon: <UserIcon size={18}/>, required: true },
-    { key: 'email', label: 'Email', type: 'email', icon: <Mail size={18}/>, required: true, colSpan: 2 },
-    { key: 'password', label: 'Clave Temporal', type: 'password', icon: <Lock size={18}/>, required: true },
-    { key: 'phone', label: 'Teléfono', type: 'text', icon: <Phone size={18}/>, required: true },
-    { key: 'document', label: 'Identificación', type: 'text', icon: <FileText size={18}/>, required: true },
-    { 
-      key: 'role', 
-      label: 'Rol Asignado', 
-      type: 'select', 
+    { key: 'firstName', label: 'Nombre', type: 'text', icon: <UserIcon size={18} />, required: true },
+    { key: 'lastName', label: 'Apellido', type: 'text', icon: <UserIcon size={18} />, required: true },
+    { key: 'email', label: 'Email', type: 'email', icon: <Mail size={18} />, required: true, colSpan: 2 },
+    { key: 'password', label: 'Clave Temporal', type: 'password', icon: <Lock size={18} />, required: true },
+    { key: 'phone', label: 'Teléfono', type: 'text', icon: <Phone size={18} />, required: true },
+    { key: 'document', label: 'Identificación', type: 'text', icon: <FileText size={18} />, required: true },
+    {
+      key: 'role',
+      label: 'Rol Asignado',
+      type: 'select',
       required: true,
       options: [
         { label: 'ADMINISTRADOR', value: 'ADMIN' },
@@ -66,23 +67,23 @@ export default function UsersManagementPage() {
   // Estados de UI
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [editDrawer, setEditDrawer] = useState<{ open: boolean; user: any | null }>({ open: false, user: null });
-  const [deleteModal, setDeleteModal] = useState<{ open: boolean; user: any | null }>({ open: false, user: null });
-  const [statusModal, setStatusModal] = useState<{ open: boolean; user: any | null }>({ open: false, user: null });
-  
+  const [editDrawer, setEditDrawer] = useState<{ open: boolean; user: UserWithDetails | null }>({ open: false, user: null });
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; user: UserWithDetails | null }>({ open: false, user: null });
+  const [statusModal, setStatusModal] = useState<{ open: boolean; user: UserWithDetails | null }>({ open: false, user: null });
+
   // Estado de Filtros
   const [filters, setFilters] = useState({ search: '', role: '', isActive: '', document: '' });
 
   // Lógica de Filtrado
   const filteredUsers = useMemo(() => {
     return users.filter(user => {
-      const matchSearch = !filters.search || 
+      const matchSearch = !filters.search ||
         `${user.firstName} ${user.lastName}`.toLowerCase().includes(filters.search.toLowerCase()) ||
         user.email.toLowerCase().includes(filters.search.toLowerCase());
       const matchRole = !filters.role || user.role === filters.role;
       const matchStatus = !filters.isActive || String(user.isActive) === filters.isActive;
       const matchDoc = !filters.document || user.document.includes(filters.document);
-      
+
       return matchSearch && matchRole && matchStatus && matchDoc;
     });
   }, [users, filters]);
@@ -126,14 +127,14 @@ export default function UsersManagementPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader 
-        title="Gestión de Personal" 
+      <PageHeader
+        title="Gestión de Personal"
         subtitle="Administre los accesos y roles de su equipo operativo."
         actions={
           <>
-            <Button 
-              variant="secondary" 
-              onClick={() => setIsFilterOpen(!isFilterOpen)} 
+            <Button
+              variant="secondary"
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
               className={cn(
                 "rounded-xl h-12 gap-2 border-slate-200 transition-all",
                 isFilterOpen && "bg-slate-900 text-white border-slate-900",
@@ -154,20 +155,20 @@ export default function UsersManagementPage() {
       />
 
       {/* BARRA DE FILTROS DINÁMICA */}
-      <FilterBar 
+      <FilterBar
         isOpen={isFilterOpen}
         config={userFilterConfig}
         filters={filters}
-        onFilterChange={setFilters}
+        onFilterChange={(newFilters) => setFilters(newFilters as any)}
         onClear={() => setFilters({ search: '', role: '', isActive: '', document: '' })}
       />
 
       <Card className="border-none shadow-sm overflow-visible rounded-[2rem]">
         <CardContent className="p-0">
-          <UserTable 
-            users={filteredUsers} 
-            isLoading={loading} 
-            onDelete={(user) => setDeleteModal({ open: true, user })} 
+          <UserTable
+            users={filteredUsers}
+            isLoading={loading}
+            onDelete={(user) => setDeleteModal({ open: true, user })}
             onToggleStatus={(user) => setStatusModal({ open: true, user })}
             onEdit={(user) => setEditDrawer({ open: true, user })}
           />
@@ -175,11 +176,13 @@ export default function UsersManagementPage() {
       </Card>
 
       {/* Edición (Ahora auto-gestionado) */}
-      <EditUserDrawer 
-        isOpen={editDrawer.open}
-        user={editDrawer.user}
-        onClose={() => setEditDrawer({ open: false, user: null })}
-      />
+      {editDrawer.open && editDrawer.user && (
+        <EditUserDrawer
+          isOpen={editDrawer.open}
+          user={editDrawer.user}
+          onClose={() => setEditDrawer({ open: false, user: null })}
+        />
+      )}
 
       {/* Creación (Usando el nuevo FormDrawer genérico) */}
       <FormDrawer
@@ -191,7 +194,7 @@ export default function UsersManagementPage() {
         onSubmit={handleCreateUser}
       />
 
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={deleteModal.open}
         title="¿Eliminar colaborador?"
         description={`Esta acción eliminará permanentemente a ${deleteModal.user?.firstName}.`}
@@ -200,7 +203,7 @@ export default function UsersManagementPage() {
         onConfirm={confirmDelete}
       />
 
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={statusModal.open}
         title={statusModal.user?.isActive ? 'Desactivar acceso' : 'Activar acceso'}
         description={`¿Desea cambiar el estado de acceso para ${statusModal.user?.firstName}?`}

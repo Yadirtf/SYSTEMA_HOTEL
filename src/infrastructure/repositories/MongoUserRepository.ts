@@ -63,10 +63,10 @@ export class MongoUserRepository implements UserRepository {
     try {
       const adminRole = await RoleModel.findOne({ name: 'ADMIN' });
       if (!adminRole) return false;
-      
+
       const adminUser = await UserModel.findOne({ roleId: adminRole._id });
       return !!adminUser;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

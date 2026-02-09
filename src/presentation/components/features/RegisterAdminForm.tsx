@@ -11,8 +11,11 @@ interface RegisterFormProps {
   onSuccess: () => void;
 }
 
+import { ConfirmModal } from '@/presentation/components/ui/ConfirmModal';
+
 export const RegisterAdminForm = ({ onSuccess }: RegisterFormProps) => {
   const { registerAdmin, loading, error } = useAuth();
+  const [showSuccess, setShowSuccess] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -31,16 +34,16 @@ export const RegisterAdminForm = ({ onSuccess }: RegisterFormProps) => {
     }
     try {
       await registerAdmin(formData);
-      onSuccess();
-    } catch (err) {}
+      setShowSuccess(true);
+    } catch (err) { }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const isFormValid = Object.values(formData).every(val => val !== '') && 
-                      formData.password === formData.confirmPassword;
+  const isFormValid = Object.values(formData).every(val => val !== '') &&
+    formData.password === formData.confirmPassword;
 
   return (
     <div className="w-full space-y-8">
@@ -66,7 +69,7 @@ export const RegisterAdminForm = ({ onSuccess }: RegisterFormProps) => {
             required
           />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
             label="Documento"
@@ -111,22 +114,36 @@ export const RegisterAdminForm = ({ onSuccess }: RegisterFormProps) => {
             required
           />
         </div>
-        
+
         {error && (
           <div className="p-4 rounded-xl bg-red-50 text-red-600 text-[10px] font-bold text-center uppercase tracking-widest">
             Protocolo de Registro Bloqueado
           </div>
         )}
 
-        <Button 
-          type="submit" 
-          className="w-full h-14 rounded-2xl bg-slate-900" 
+        <Button
+          type="submit"
+          className="w-full h-14 rounded-2xl bg-slate-900"
           isLoading={loading}
           disabled={!isFormValid}
         >
           Finalizar Registro <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
       </form>
+
+      <ConfirmModal
+        isOpen={showSuccess}
+        title="¡Registro Exitoso!"
+        description="El administrador ha sido registrado correctamente en el sistema. Ahora puede iniciar sesión con sus credenciales."
+        confirmText="Ir al Login"
+        variant="success"
+        showCancel={false}
+        onClose={() => { }} // Bloquéalo o permítele cerrar
+        onConfirm={() => {
+          setShowSuccess(false);
+          onSuccess();
+        }}
+      />
     </div>
   );
 };

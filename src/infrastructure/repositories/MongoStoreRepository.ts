@@ -69,8 +69,7 @@ export class MongoStoreRepository implements StoreRepository {
     const data = { ...product };
     // Asegurarse de que si viene como string vacío, sea undefined para sparse index
     if (data.barcode === '') {
-      // @ts-ignore
-      data.barcode = undefined; 
+      data.barcode = undefined;
     }
     const doc = await ProductModel.findByIdAndUpdate(id, data, { new: true });
     if (!doc) throw new Error('PRODUCT_NOT_FOUND');
@@ -82,8 +81,8 @@ export class MongoStoreRepository implements StoreRepository {
   }
 
   async updateStock(productId: string, quantity: number): Promise<void> {
-    await ProductModel.findByIdAndUpdate(productId, { 
-      $inc: { currentStock: quantity } 
+    await ProductModel.findByIdAndUpdate(productId, {
+      $inc: { currentStock: quantity }
     });
   }
 
@@ -104,7 +103,7 @@ export class MongoStoreRepository implements StoreRepository {
   }
 
   async listMovements(filters?: { productId?: string; type?: string }): Promise<InventoryMovement[]> {
-    const query: any = {};
+    const query: Record<string, any> = {};
     if (filters?.productId) query.productId = filters.productId;
     if (filters?.type) query.type = filters.type;
 

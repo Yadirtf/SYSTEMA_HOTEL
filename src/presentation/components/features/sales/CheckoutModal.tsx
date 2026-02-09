@@ -9,19 +9,14 @@ interface CheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
   total: number;
-  onConfirm: (paymentMethod: string, receivedAmount: number) => void;
+  onConfirm: (paymentMethod: 'CASH' | 'TRANSFER' | 'CARD', receivedAmount: number) => Promise<void>;
   isLoading?: boolean;
 }
 
 export const CheckoutModal = ({ isOpen, onClose, total, onConfirm, isLoading }: CheckoutModalProps) => {
-  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'CARD' | 'TRANSFER'>('CASH');
+  const [paymentMethod, setPaymentMethod] = useState<'CASH' | 'TRANSFER' | 'CARD'>('CASH');
   const [receivedAmount, setReceivedAmount] = useState<string>('');
-  const [change, setChange] = useState<number>(0);
-
-  useEffect(() => {
-    const received = parseFloat(receivedAmount) || 0;
-    setChange(Math.max(0, received - total));
-  }, [receivedAmount, total]);
+  const change = Math.max(0, (parseFloat(receivedAmount) || 0) - total);
 
   if (!isOpen) return null;
 
@@ -33,7 +28,7 @@ export const CheckoutModal = ({ isOpen, onClose, total, onConfirm, isLoading }: 
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         {/* Backdrop */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -42,7 +37,7 @@ export const CheckoutModal = ({ isOpen, onClose, total, onConfirm, isLoading }: 
         />
 
         {/* Modal Content */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -54,7 +49,7 @@ export const CheckoutModal = ({ isOpen, onClose, total, onConfirm, isLoading }: 
               <h2 className="text-2xl font-black text-slate-900">Finalizar Venta</h2>
               <p className="text-slate-500 font-medium">Completa los detalles del pago</p>
             </div>
-            <button 
+            <button
               onClick={onClose}
               className="w-12 h-12 flex items-center justify-center rounded-2xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-all"
             >
@@ -78,12 +73,11 @@ export const CheckoutModal = ({ isOpen, onClose, total, onConfirm, isLoading }: 
               ].map((method) => (
                 <button
                   key={method.id}
-                  onClick={() => setPaymentMethod(method.id as any)}
-                  className={`flex flex-col items-center gap-3 p-4 rounded-3xl border-2 transition-all ${
-                    paymentMethod === method.id 
-                      ? `border-slate-900 bg-slate-900 text-white shadow-lg` 
-                      : `border-slate-100 bg-white text-slate-400 hover:border-slate-200`
-                  }`}
+                  onClick={() => setPaymentMethod(method.id as 'CASH' | 'TRANSFER' | 'CARD')}
+                  className={`flex flex-col items-center gap-3 p-4 rounded-3xl border-2 transition-all ${paymentMethod === method.id
+                    ? `border-slate-900 bg-slate-900 text-white shadow-lg`
+                    : `border-slate-100 bg-white text-slate-400 hover:border-slate-200`
+                    }`}
                 >
                   <method.icon size={24} />
                   <span className="text-xs font-bold uppercase tracking-wider">{method.label}</span>
