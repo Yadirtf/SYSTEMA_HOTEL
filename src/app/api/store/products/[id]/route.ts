@@ -8,7 +8,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const guard = await requireRole(['ADMIN', 'RECEPCIONIST'])(req);
+    const guard = await requireRole(['ADMIN', 'RECEPCIONISTA'])(req);
     if (guard.error) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
     const { id } = await params;

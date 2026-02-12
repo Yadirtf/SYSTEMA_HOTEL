@@ -15,7 +15,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const guard = await requireRole(['ADMIN', 'RECEPCIONIST'])(req);
+    const guard = await requireRole(['ADMIN', 'RECEPCIONISTA'])(req);
     if (guard.error) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
     await dbConnect();
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
     const sale = await saleUseCases.executeCreate({
       ...data,
-      performedBy: guard.user?.sub
+      performedBy: guard.user?.id
     });
 
     return NextResponse.json(sale, { status: 201 });

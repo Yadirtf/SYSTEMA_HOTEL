@@ -18,7 +18,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const guard = await requireRole(['ADMIN', 'RECEPCIONIST'])(req);
+    const guard = await requireRole(['ADMIN', 'RECEPCIONISTA'])(req);
     if (guard.error) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
     await dbConnect();

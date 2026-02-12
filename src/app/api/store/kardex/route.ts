@@ -22,7 +22,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const guard = await requireRole(['ADMIN', 'RECEPCIONIST'])(req);
+    const guard = await requireRole(['ADMIN', 'RECEPCIONISTA'])(req);
     if (guard.error) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
     await dbConnect();
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     // Asignar el usuario que realiza el movimiento desde el token
     const movement = await kardexUseCases.executeRegister({
       ...data,
-      performedBy: guard.user?.sub // El ID del usuario está en el sub del token JWT
+      performedBy: guard.user?.id // El ID del usuario está en el id del objeto retornado por RoleGuard
     });
 
     return NextResponse.json(movement, { status: 201 });
